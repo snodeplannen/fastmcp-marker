@@ -356,7 +356,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     info="Kies de LLM provider voor AI verbetering."
                 )
                 
-                with gr.Group(visible=True) as gemini_settings:
+                with gr.Group(visible=False) as gemini_settings:
                     google_api_key = gr.Textbox(
                         label="Google API Key", 
                         type="password",
@@ -426,7 +426,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                         info="Azure API versie."
                     )
                 
-                with gr.Group(visible=False) as ollama_settings:
+                with gr.Group(visible=True) as ollama_settings:
                     ollama_base_url = gr.Textbox(
                         label="Ollama Base URL", 
                         value="http://localhost:11434",
