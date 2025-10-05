@@ -636,7 +636,7 @@ requires-dist = [
     { name = "fastmcp" },
     { name = "gradio" },
     { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "marker-pdf", git = "https://github.com/datalab-to/marker.git" },
+    { name = "marker-pdf", git = "https://github.com/datalab-to/marker" },
     { name = "torch" },
     { name = "torchaudio" },
     { name = "torchvision" },
@@ -1115,7 +1115,7 @@ wheels = [
 [[package]]
 name = "marker-pdf"
 version = "1.10.1"
-source = { git = "https://github.com/datalab-to/marker.git#d5000be48f9e68ffe64c685a752b2b1239b7411b" }
+source = { git = "https://github.com/datalab-to/marker#d5000be48f9e68ffe64c685a752b2b1239b7411b" }
 dependencies = [
     { name = "anthropic" },
     { name = "click" },

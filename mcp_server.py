@@ -8,8 +8,7 @@ AI agents can use to convert PDF documents to Markdown format.
 
 from fastmcp import FastMCP
 
-# Import Windows fix first
-import windows_fix
+
 import conversion_service_subprocess as conversion_service
 
 # Instantiate the FastMCP server with a descriptive name

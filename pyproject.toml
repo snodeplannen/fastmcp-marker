@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp",
-    "marker-pdf @ git+https://github.com/datalab-to/marker.git",
+    "marker-pdf",
     "gradio",
     "torch",
     "torchvision",
@@ -23,3 +23,6 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+
+[tool.uv.sources]
+marker-pdf = { git = "https://github.com/datalab-to/marker" }

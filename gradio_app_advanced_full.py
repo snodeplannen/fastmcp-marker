@@ -125,16 +125,97 @@ def process_pdf(uploaded_file, progress=gr.Progress(track_tqdm=True), *settings_
     if settings["languages"] and isinstance(settings["languages"], str):
         settings["languages"] = [lang.strip() for lang in settings["languages"].split(',')]
 
+    # Filter LLM instellingen op basis van geselecteerde provider
+    llm_provider = settings.get("llm_provider", "gemini")
+    use_llm = settings.get("use_llm", False)
+    
+    # Verwijder LLM instellingen van niet-geselecteerde providers
+    providers = ["gemini", "openai", "anthropic", "azure", "ollama", "custom"]
+    for provider in providers:
+        if provider != llm_provider:
+            # Verwijder API keys en instellingen van andere providers
+            if provider == "gemini":
+                settings.pop("google_api_key", None)
+                settings.pop("gemini_model_name", None)
+            elif provider == "openai":
+                settings.pop("openai_api_key", None)
+                settings.pop("openai_model_name", None)
+                settings.pop("openai_base_url", None)
+            elif provider == "anthropic":
+                settings.pop("anthropic_api_key", None)
+                settings.pop("anthropic_model_name", None)
+            elif provider == "azure":
+                settings.pop("azure_api_key", None)
+                settings.pop("azure_endpoint", None)
+                settings.pop("azure_deployment", None)
+                settings.pop("azure_api_version", None)
+            elif provider == "ollama":
+                settings.pop("ollama_base_url", None)
+                settings.pop("ollama_model_name", None)
+            elif provider == "custom":
+                settings.pop("custom_api_key", None)
+                settings.pop("custom_base_url", None)
+                settings.pop("custom_model_name", None)
+    
+    # Als LLM niet gebruikt wordt, verwijder alle LLM-specifieke instellingen
+    if not use_llm:
+        llm_specific_keys = [
+            "llm_provider", "google_api_key", "gemini_model_name",
+            "openai_api_key", "openai_model_name", "openai_base_url",
+            "anthropic_api_key", "anthropic_model_name",
+            "azure_api_key", "azure_endpoint", "azure_deployment", "azure_api_version",
+            "ollama_base_url", "ollama_model_name",
+            "custom_api_key", "custom_base_url", "custom_model_name",
+            "max_retries", "max_concurrency", "timeout", "temperature", "max_tokens",
+            "use_llm_layout", "use_llm_table", "use_llm_equation", "use_llm_handwriting",
+            "use_llm_complex_region", "use_llm_form", "use_llm_image_description", 
+            "use_llm_table_merge", "use_llm_text",
+            "layout_prompt", "table_prompt", "equation_prompt", "handwriting_prompt",
+            "complex_relabeling_prompt", "table_rewriting_prompt", "table_merge_prompt", "image_description_prompt",
+            "confidence_threshold", "picture_height_threshold", "min_equation_height", "equation_image_expansion_ratio",
+            "max_rows_per_batch", "table_image_expansion_ratio", "table_height_threshold",
+            "table_start_threshold", "vertical_table_height_threshold", "vertical_table_distance_threshold",
+            "horizontal_table_width_threshold", "horizontal_table_distance_threshold", "column_gap_threshold",
+            "image_expansion_ratio"
+        ]
+        for key in llm_specific_keys:
+            settings.pop(key, None)
+
     print(f"🔍 Debug: Starting conversion for file: {uploaded_file.name}")
-    print(f"🔍 Debug: Settings: {settings}")
+    print(f"🔍 Debug: LLM Provider: {llm_provider}, Use LLM: {use_llm}")
+    print(f"🔍 Debug: Settings count after filtering: {len(settings)}")
+    print(f"🔍 Debug: Key settings:")
+    for key, value in settings.items():
+        if value is not None and value != "" and value != False:
+            print(f"  {key}: {value}")
     
     # Update UI to show detailed processing
+    llm_info = "Nee"
+    if use_llm:
+        provider_name = llm_provider.title()
+        if llm_provider == "gemini":
+            model_name = settings.get("gemini_model_name", "gemini-2.0-flash")
+        elif llm_provider == "openai":
+            model_name = settings.get("openai_model_name", "gpt-4o")
+        elif llm_provider == "anthropic":
+            model_name = settings.get("anthropic_model_name", "claude-3-5-sonnet-20241022")
+        elif llm_provider == "azure":
+            model_name = settings.get("azure_deployment", "azure-model")
+        elif llm_provider == "ollama":
+            model_name = settings.get("ollama_model_name", "llama3.2:latest")
+        elif llm_provider == "custom":
+            model_name = settings.get("custom_model_name", "custom-model")
+        else:
+            model_name = "unknown"
+        llm_info = f"Ja ({provider_name}: {model_name})"
+    
     yield (
         "### 🔄 PDF Conversie in Uitvoering\n\n" +
         f"**Bestand:** {uploaded_file.name}\n" +
         f"**Output Formaat:** {settings.get('output_format', 'markdown')}\n" +
-        f"**LLM Gebruik:** {'Ja' if settings.get('use_llm') else 'Nee'}\n" +
-        f"**OCR:** {'Geforceerd' if settings.get('force_ocr') else 'Automatisch'}\n\n" +
+        f"**LLM Gebruik:** {llm_info}\n" +
+        f"**OCR:** {'Geforceerd' if settings.get('force_ocr') else 'Automatisch'}\n" +
+        f"**Instellingen:** {len(settings)} parameters\n\n" +
         "⏳ De conversie is bezig... Dit kan 30 seconden tot enkele minuten duren.",
         "",
         gr.update(visible=False),
@@ -263,14 +344,14 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
             with gr.Accordion("🤖 LLM & AI Verbetering", open=False) as llm_settings:
                 use_llm = gr.Checkbox(
                     label="Gebruik LLM", 
-                    value=False,
+                    value=True,
                     info="Activeer LLM voor hogere kwaliteit verwerking."
                 )
                 
                 llm_provider = gr.Radio(
                     ["gemini", "openai", "anthropic", "azure", "ollama", "custom"],
                     label="LLM Provider",
-                    value="gemini",
+                    value="ollama",
                     info="Kies de LLM provider voor AI verbetering."
                 )
                 
@@ -352,8 +433,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     )
                     ollama_model_name = gr.Textbox(
                         label="Ollama Model", 
-                        value="llama3.1",
-                        placeholder="llama3.1, codellama, mistral, etc.",
+                        value="llama3.2:latest",
+                        placeholder="llama3.2:latest, codellama, mistral, etc.",
                         info="Ollama model naam."
                     )
                 
@@ -662,7 +743,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
             with gr.Accordion("⚡ Performance & Workers", open=False) as performance_settings:
                 pdftext_workers = gr.Number(
                     label="PDFText Workers", 
-                    value=4,
+                    value=1,
                     precision=0,
                     info="Aantal workers voor pdftext verwerking."
                 )
