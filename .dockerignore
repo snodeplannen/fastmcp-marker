@@ -1,0 +1,108 @@
+# Docker ignore file voor FastMCP Marker project
+# Optimaliseert Docker build door onnodige bestanden uit te sluiten
+
+# Python cache en bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Data directories (optioneel - kan worden ingeschakeld voor data persistence)
+# data/
+# output/
+# debug_data/
+
+# UV package manager (behoud uv.lock voor frozen installs)
+uv/
+uv.mdc
+# Behoud uv.lock voor reproducible builds
+
+# MyPy
+mypy.ini
+.mypy_cache/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Local configuration
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

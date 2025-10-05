@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Combined service - both MCP server and Gradio web interface (GPU)
+  fastmcp-marker:
+    build: .
+    container_name: fastmcp-marker
+    ports:
+      - "8000:8000"  # MCP Server
+      - "7860:7860"  # Gradio Web Interface
+    environment:
+      - TORCH_DEVICE=cuda
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # CPU-only fallback service (alleen starten met --profile cpu-only)
+  fastmcp-marker-cpu:
+    build: .
+    container_name: fastmcp-marker-cpu
+    ports:
+      - "8001:8000"  # MCP Server
+      - "7861:7860"  # Gradio Web Interface
+    environment:
+      - TORCH_DEVICE=cpu
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+    restart: unless-stopped
+    profiles:
+      - cpu-only
+
+volumes:
+  data:
+    driver: local
+  output:
+    driver: local
+  logs:
+    driver: local
+
+networks:
+  default:
+    name: fastmcp-marker-network

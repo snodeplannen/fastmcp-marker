@@ -165,17 +165,69 @@ De Marker library ondersteunt verschillende configuratie opties voor optimalisat
 
 ### Docker Deployment
 
-```dockerfile
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
-ENV TORCH_DEVICE=cuda
-# ... rest van Dockerfile
+Het project bevat volledige Docker ondersteuning met CUDA/cuDNN voor GPU acceleratie.
+
+#### Vereisten
+- Docker met NVIDIA Container Toolkit
+- NVIDIA GPU met CUDA ondersteuning (optioneel)
+
+#### Snelle Start
+
+1. **Start GPU versie (standaard):**
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **CPU-only mode (zonder GPU):**
+   ```bash
+   docker-compose --profile cpu-only up
+   ```
+
+> **💡 Tip**: Standaard wordt alleen de GPU versie gestart. De CPU fallback wordt alleen gestart wanneer je expliciet `--profile cpu-only` gebruikt.
+
+#### Services en Poorten
+
+- **MCP Server**: `http://localhost:8000` (GPU) / `http://localhost:8001` (CPU)
+- **Gradio Web**: `http://localhost:7860` (GPU) / `http://localhost:7861` (CPU)
+
+> **💡 Tip**: De Docker image start automatisch beide services tegelijkertijd via het `start_services.sh` script.
+
+#### Docker Commands
+
+```bash
+# Build image
+docker build -t fastmcp-marker .
+
+# Run both services (MCP + Gradio)
+docker run --gpus all -p 8000:8000 -p 7860:7860 fastmcp-marker
+
+# CPU-only mode
+docker run -e TORCH_DEVICE=cpu -p 8000:8000 -p 7860:7860 fastmcp-marker
+```
+
+#### Volume Mounts
+
+De Docker containers mounten de volgende directories:
+- `./data` → `/app/data` (input PDFs)
+- `./output` → `/app/output` (geconverteerde bestanden)
+- `./logs` → `/app/logs` (log bestanden)
+
+#### Environment Variables
+
+```bash
+# GPU configuratie
+TORCH_DEVICE=cuda
+CUDA_VISIBLE_DEVICES=0
+
+# CPU-only mode
+TORCH_DEVICE=cpu
 ```
 
 ### Cloud Deployment
 
 - **FastMCP Cloud**: Voor MCP server deployment
 - **Gradio Spaces**: Voor web interface deployment
-- **AWS/GCP/Azure**: Voor volledige container deployment
+- **AWS/GCP/Azure**: Voor volledige container deployment met GPU ondersteuning
 
 ## 🔍 Troubleshooting
 
@@ -197,6 +249,32 @@ ENV TORCH_DEVICE=cuda
 4. **Slow conversion:**
    - Controleer GPU beschikbaarheid
    - Overweeg OCR disable voor digitale documenten
+
+### Docker-specifieke Problemen
+
+1. **NVIDIA Container Toolkit niet geïnstalleerd:**
+   ```bash
+   # Ubuntu/Debian
+   distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+   curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+   curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+   sudo apt-get update && sudo apt-get install -y nvidia-docker2
+   sudo systemctl restart docker
+   ```
+
+2. **CUDA niet beschikbaar in container:**
+   ```bash
+   # Test CUDA beschikbaarheid
+   docker run --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi
+   ```
+
+3. **Container start niet:**
+   - Controleer poort beschikbaarheid: `netstat -tulpn | grep :8000`
+   - Gebruik CPU-only mode als fallback: `docker-compose --profile cpu-only up`
+
+4. **Build faalt:**
+   - Verhoog Docker memory limit
+   - Gebruik `--no-cache` flag: `docker-compose build --no-cache`
 
 ### Logs
 
