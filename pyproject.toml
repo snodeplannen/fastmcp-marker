@@ -3,7 +3,7 @@ name = "fastmcp-marker"
 version = "0.1.0"
 description = "Dual-interface PDF-to-Markdown service with FastMCP and Gradio"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "fastmcp",
     "marker-pdf",
@@ -12,6 +12,7 @@ dependencies = [
     "torchvision",
     "torchaudio",
     "jinja2>=3.1.6",
+    "psutil>=7.1.0",
 ]
 
 [build-system]

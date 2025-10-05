@@ -1,0 +1,100 @@
+{
+  "name": "FastMCP Marker Development",
+  "dockerFile": "Dockerfile",
+  "context": "..",
+  
+  // Features voor development
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  // VS Code extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-markdown",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode.makefile-tools",
+        "ms-vscode.powershell"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3.12",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.lintOnSave": true,
+        "python.formatting.blackArgs": ["--line-length", "88"],
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        },
+        "files.eol": "\n",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Environment variables
+  "containerEnv": {
+    "TORCH_DEVICE": "cuda",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "PYTHONPATH": "/workspace",
+    "DEBIAN_FRONTEND": "noninteractive"
+  },
+
+  // Port forwarding
+  "forwardPorts": [8000, 7860],
+  "portsAttributes": {
+    "8000": {
+      "label": "MCP Server",
+      "onAutoForward": "notify"
+    },
+    "7860": {
+      "label": "Gradio Web Interface",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  // Mount volumes
+  "mounts": [
+    "source=${localWorkspaceFolder}/data,target=/workspace/data,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/output,target=/workspace/output,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/logs,target=/workspace/logs,type=bind,consistency=cached"
+  ],
+
+  // Post-create commands
+  "postCreateCommand": "uv sync && echo '✅ Development environment ready!'",
+
+  // Post-start commands
+  "postStartCommand": "echo '🚀 FastMCP Marker development container started!'",
+
+  // Remote user
+  "remoteUser": "root",
+
+  // GPU support
+  "runArgs": [
+    "--gpus=all"
+  ],
+
+  // Workspace folder
+  "workspaceFolder": "/workspace",
+
+  // Shutdown action
+  "shutdownAction": "stopContainer",
+
+  // Update content command
+  "updateContentCommand": "uv sync",
+
+  // Initialize command
+  "initializeCommand": "echo '🔧 Initializing FastMCP Marker development environment...'"
+}

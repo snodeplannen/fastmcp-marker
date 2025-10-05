@@ -20,11 +20,58 @@ Het systeem bestaat uit drie hoofdcomponenten:
 
 ## 📋 Vereisten
 
-- Python 3.10+
+- Python 3.12+
 - uv package manager
 - NVIDIA GPU (optioneel, voor betere prestaties)
 
-## 🛠️ Installatie
+## 🛠️ Development Setup
+
+### DevContainer (Aanbevolen)
+
+Voor een consistente development environment met CUDA ondersteuning:
+
+1. **Open in VS Code/Cursor:**
+   ```bash
+   code .
+   ```
+
+2. **Reopen in Container:**
+   - Druk `Ctrl+Shift+P` (of `Cmd+Shift+P` op Mac)
+   - Selecteer "Dev Containers: Reopen in Container"
+   - Wacht tot de container is gebouwd en gestart
+
+3. **Development features:**
+   - ✅ CUDA/cuDNN ondersteuning
+   - ✅ Alle Python dependencies geïnstalleerd
+   - ✅ VS Code extensions geconfigureerd
+   - ✅ Port forwarding (8000, 7860)
+   - ✅ Volume mounts voor data/output/logs
+   - ✅ Interactive bash shell
+
+### Lokale Development
+
+#### Automatische Build Scripts (Aanbevolen)
+
+Voor een correcte installatie met CUDA PyTorch ondersteuning:
+
+**Windows Command Prompt:**
+```cmd
+build_venv.cmd
+```
+
+**Windows PowerShell:**
+```powershell
+.\build_venv.ps1
+```
+
+**Unix/Linux/macOS:**
+```bash
+./build_venv.sh
+```
+
+> **💡 Waarom deze scripts?** Ze zorgen ervoor dat CUDA PyTorch wordt geïnstalleerd voordat andere dependencies, wat voorkomt dat de CPU-versie wordt geïnstalleerd.
+
+#### Handmatige Installatie
 
 1. **Clone het project:**
    ```bash
@@ -32,12 +79,31 @@ Het systeem bestaat uit drie hoofdcomponenten:
    cd fastmcp-marker
    ```
 
-2. **Installeer dependencies met uv:**
+2. **Maak virtual environment:**
+   ```bash
+   uv venv
+   ```
+
+3. **Activeer environment:**
+   ```bash
+   # Windows
+   .venv\Scripts\activate
+   
+   # Unix/Linux/macOS
+   source .venv/bin/activate
+   ```
+
+4. **Installeer CUDA PyTorch eerst:**
+   ```bash
+   uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+   ```
+
+5. **Installeer overige dependencies:**
    ```bash
    uv sync
    ```
 
-3. **Test de installatie:**
+6. **Test de installatie:**
    ```bash
    uv run test_system.py
    ```
@@ -275,6 +341,28 @@ TORCH_DEVICE=cpu
 4. **Build faalt:**
    - Verhoog Docker memory limit
    - Gebruik `--no-cache` flag: `docker-compose build --no-cache`
+
+### DevContainer-specifieke Problemen
+
+1. **DevContainer start niet:**
+   - Controleer NVIDIA Container Toolkit: `docker run --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi`
+   - Herstart Docker Desktop
+   - Gebruik "Dev Containers: Rebuild Container"
+
+2. **CUDA niet beschikbaar in DevContainer:**
+   - Controleer `runArgs` in devcontainer.json
+   - Verificeer GPU beschikbaarheid: `nvidia-smi`
+   - Herstart de DevContainer
+
+3. **Port forwarding werkt niet:**
+   - Controleer poort configuratie in devcontainer.json
+   - Gebruik "Ports" tab in VS Code
+   - Handmatig forwarden: `uv run mcp_server.py`
+
+4. **Extensions niet geïnstalleerd:**
+   - Herstart VS Code/Cursor
+   - Gebruik "Dev Containers: Rebuild Container"
+   - Controleer extensions in devcontainer.json
 
 ### Logs
 

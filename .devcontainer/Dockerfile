@@ -1,21 +1,21 @@
-# FastMCP Marker - Docker Configuration
-# Gebruikt NVIDIA CUDA base image voor GPU ondersteuning
+# FastMCP Marker - Development Container
+# Gebaseerd op de productie Dockerfile maar geoptimaliseerd voor development
 
 FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 # Metadata
-LABEL maintainer="FastMCP Marker Team"
-LABEL description="PDF-to-Markdown conversion service with CUDA support"
-LABEL version="0.1.0"
+LABEL maintainer="FastMCP Marker Development Team"
+LABEL description="Development environment for FastMCP Marker with CUDA support"
+LABEL version="0.1.0-dev"
 
 # Environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV TORCH_DEVICE=cuda
 ENV CUDA_VISIBLE_DEVICES=0
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/workspace
 
-# Install system dependencies
+# Install system dependencies (uitgebreider voor development)
 RUN apt-get update && apt-get install -y \
     software-properties-common \
     curl \
@@ -28,6 +28,14 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     libgcc-s1 \
+    vim \
+    nano \
+    htop \
+    tree \
+    jq \
+    wget \
+    unzip \
+    zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Add deadsnakes PPA for Python 3.12
@@ -44,7 +52,7 @@ RUN apt-get install -y \
 # Create symbolic link for python
 RUN ln -s /usr/bin/python3.12 /usr/bin/python
 
-# Install uv package manager (nieuwere methode)
+# Install uv package manager
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.cargo/bin:$PATH"
 
@@ -52,30 +60,36 @@ ENV PATH="/root/.cargo/bin:$PATH"
 RUN uv --version
 
 # Set working directory
-WORKDIR /app
+WORKDIR /workspace
 
 # Copy project files voor betere Docker layer caching
 COPY pyproject.toml uv.lock ./
 COPY stubs/ ./stubs/
 
-# Install Python dependencies with uv (met optimale configuratie)
-RUN uv sync --frozen --no-dev
+# Install Python dependencies with uv (inclusief dev dependencies)
+RUN uv sync --frozen
 
 # Copy application code
 COPY . .
 
-# Make startup script executable
-RUN chmod +x /app/start_services.sh
-
 # Create necessary directories
-RUN mkdir -p /app/data /app/output /app/logs
+RUN mkdir -p /workspace/data /workspace/output /workspace/logs
+
+# Make startup script executable
+RUN chmod +x /workspace/start_services.sh
 
 # Expose ports
 EXPOSE 8000 7860
 
-# Health check - check both services
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || curl -f http://localhost:7860/ || exit 1
+# Development-specific setup
+RUN echo 'alias ll="ls -la"' >> /root/.bashrc
+RUN echo 'alias la="ls -A"' >> /root/.bashrc
+RUN echo 'alias l="ls -CF"' >> /root/.bashrc
+RUN echo 'export PS1="\[\033[01;32m\]FastMCP-Dev\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /root/.bashrc
 
-# Default command - start both services
-CMD ["/app/start_services.sh"]
+# Health check voor development
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import torch; print('CUDA available:', torch.cuda.is_available())" || exit 1
+
+# Default command voor development (interactive shell)
+CMD ["/bin/bash"]
