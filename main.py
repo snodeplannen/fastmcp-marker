@@ -15,7 +15,7 @@ sys.path.append(str(Path(__file__).parent))
 # Import Windows fix first
 #import windows_fix
 
-def print_banner():
+def print_banner() -> None:
     """Print een mooie banner."""
     print("=" * 60)
     print("🚀 FastMCP Marker - PDF to Markdown Service")
@@ -85,7 +85,7 @@ def demo_gradio_app() -> None:
     except Exception as e:
         print(f"   ❌ Error checking Gradio app: {e}")
 
-def show_usage_instructions():
+def show_usage_instructions() -> None:
     """Toon gebruiksinstructies."""
     print("\n📋 How to Use:")
     print("-" * 30)
