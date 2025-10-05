@@ -38,7 +38,7 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
     keys = [
         # Basis instellingen
         "output_format", "page_range", "debug", "output_dir",
-        # OCR instellingen  
+        # OCR instellingen
         "force_ocr", "strip_existing_ocr", "disable_ocr", "languages",
         "ocr_space_threshold", "ocr_newline_threshold", "ocr_alphanum_threshold",
         # LLM instellingen - Provider selectie
@@ -66,7 +66,7 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
         "complex_relabeling_prompt", "table_rewriting_prompt", "table_merge_prompt", "image_description_prompt",
         # LLM Thresholds & Instellingen
         "confidence_threshold", "picture_height_threshold", "min_equation_height", "equation_image_expansion_ratio",
-        "max_rows_per_batch", "max_table_rows", "table_image_expansion_ratio", "table_height_threshold",
+        "max_rows_per_batch", "table_image_expansion_ratio", "table_height_threshold",
         "table_start_threshold", "vertical_table_height_threshold", "vertical_table_distance_threshold",
         "horizontal_table_width_threshold", "horizontal_table_distance_threshold", "column_gap_threshold",
         "image_expansion_ratio",
