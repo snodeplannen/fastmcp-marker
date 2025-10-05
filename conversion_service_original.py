@@ -78,6 +78,66 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
         # Re-raise the exception to be handled by the calling interface
         raise
 
+async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
+    """
+    Converteert een PDF met geavanceerde instellingen.
+    
+    Args:
+        pdf_path: Het pad naar het PDF bestand
+        settings: Dictionary met Marker configuratie opties
+        
+    Returns:
+        Een string met de geconverteerde tekst
+    """
+    if CONVERTER is None:
+        raise RuntimeError("Marker PDF Converter is not available. Check initialization logs.")
+
+    def blocking_conversion():
+        """
+        Een synchrone wrapper voor de marker-conversieaanroep met instellingen.
+        """
+        # Maak een nieuwe converter met de specifieke instellingen
+        from marker.config.parser import ConfigParser
+        
+        # Filter None waarden uit settings
+        filtered_settings = {k: v for k, v in settings.items() if v is not None}
+        
+        try:
+            config_parser = ConfigParser(filtered_settings)
+            config_dict = config_parser.generate_config_dict()
+            
+            # Force single-threaded operation
+            config_dict["pdftext_workers"] = 1
+            config_dict["disable_multiprocessing"] = True
+            
+            # Maak een nieuwe converter met de configuratie
+            converter = PdfConverter(
+                config=config_dict,
+                artifact_dict=models,
+                processor_list=config_parser.get_processors(),
+                renderer=config_parser.get_renderer(),
+                llm_service=config_parser.get_llm_service(),
+            )
+            
+            rendered_document = converter(pdf_path)
+            text, _, _ = text_from_rendered(rendered_document)
+            return text
+            
+        except Exception as e:
+            print(f"Error creating converter with settings: {e}")
+            # Fallback naar standaard converter
+            rendered_document = CONVERTER(pdf_path)
+            text, _, _ = text_from_rendered(rendered_document)
+            return text
+
+    try:
+        # Run the blocking function in a separate thread
+        markdown_text = await asyncio.to_thread(blocking_conversion)
+        return markdown_text
+    except Exception as e:
+        print(f"An error occurred during PDF conversion: {e}")
+        raise
+
 async def convert_pdf_bytes_to_markdown(pdf_bytes: bytes) -> str:
     """
     A convenience wrapper that takes PDF content as bytes, saves it to a

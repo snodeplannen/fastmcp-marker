@@ -10,9 +10,8 @@ import gradio as gr
 import tempfile
 import traceback
 
-# Import Windows fix first
-import windows_fix
-import conversion_service_subprocess as conversion_service
+# Import de werkende single-threaded conversion service
+import conversion_service_original as conversion_service
 
 def process_pdf(uploaded_file, progress=gr.Progress(track_tqdm=True), *settings_inputs):
     """
@@ -56,11 +55,12 @@ def process_pdf(uploaded_file, progress=gr.Progress(track_tqdm=True), *settings_
         # Run the async function in a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        converted_content, output_format = loop.run_until_complete(
-            conversion_service.convert_pdf_with_subprocess(uploaded_file.name, settings)
+        converted_content = loop.run_until_complete(
+            conversion_service.convert_pdf_with_settings(uploaded_file.name, settings)
         )
         loop.close()
         
+        output_format = settings.get("output_format", "markdown")
         print(f"🔍 Debug: Conversion completed, output format: {output_format}")
         
         # --- 3. Zet UI in "Succes"-staat ---
