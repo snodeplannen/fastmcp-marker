@@ -1,0 +1,69 @@
+---
+alwaysApply: false
+---
+
+# uv Package Manager Rules
+
+## Python Package Management
+- Always use 'uv' as the package manager for this project
+- Create virtual environment with: `uv venv`
+- Run Python files with: `uv run pythonfile.py`
+- Add dependencies with: `uv add [package]`
+- Manage dependencies with: `uv sync`, `uv add`, or `uv pip`
+- If Python interpreter is not found, use `uv run`
+- Virtual environment is always located in `.venv` directory
+
+## Commands Reference
+```bash
+# Create virtual environment
+uv venv
+
+# Run Python file
+uv run main.py
+
+# Add dependency
+uv add requests
+
+# Sync dependencies
+uv sync
+
+# Install from requirements
+uv pip install -r requirements.txt
+```
+
+## Project Structure
+- Virtual environment: `.venv/`
+- Dependencies managed via `pyproject.toml`
+- Always use `uv run` for Python execution# uv Package Manager Rules
+
+## Python Package Management
+- Always use 'uv' as the package manager for this project
+- Create virtual environment with: `uv venv`
+- Run Python files with: `uv run pythonfile.py`
+- Add dependencies with: `uv add [package]`
+- Manage dependencies with: `uv sync`, `uv add`, or `uv pip`
+- If Python interpreter is not found, use `uv run`
+- Virtual environment is always located in `.venv` directory
+
+## Commands Reference
+```bash
+# Create virtual environment
+uv venv
+
+# Run Python file
+uv run main.py
+
+# Add dependency
+uv add requests
+
+# Sync dependencies
+uv sync
+
+# Install from requirements
+uv pip install -r requirements.txt
+```
+
+## Project Structure
+- Virtual environment: `.venv/`
+- Dependencies managed via `pyproject.toml`
+- Always use `uv run` for Python execution

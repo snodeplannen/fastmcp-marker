@@ -1,0 +1,25 @@
+[project]
+name = "fastmcp-marker"
+version = "0.1.0"
+description = "Dual-interface PDF-to-Markdown service with FastMCP and Gradio"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp",
+    "marker-pdf @ git+https://github.com/datalab-to/marker.git",
+    "gradio",
+    "torch",
+    "torchvision",
+    "torchaudio",
+    "jinja2>=3.1.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
