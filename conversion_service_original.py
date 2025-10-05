@@ -7,6 +7,7 @@ import asyncio
 import tempfile
 import os
 import traceback
+from typing import Any
 
 # Environment variables uit Marker scripts om threading problemen te voorkomen
 os.environ["MKL_DYNAMIC"] = "FALSE"
@@ -22,9 +23,12 @@ os.environ["IN_STREAMLIT"] = "true"  # Avoid multiprocessing inside surya
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.output import text_from_rendered
+from typing import Optional
 
 # Initialize the converter and models once when the module is loaded.
 # This is a heavy operation and should not be done on every function call.
+CONVERTER: Optional[PdfConverter] = None
+
 try:
     models = create_model_dict()
     # Configure for single-threaded operation
@@ -59,7 +63,7 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
     if CONVERTER is None:
         raise RuntimeError("Marker PDF Converter is not available. Check initialization logs.")
 
-    def blocking_conversion():
+    def blocking_conversion() -> str:
         """
         A synchronous wrapper for the marker conversion call.
         This function will be run in a separate thread.
@@ -68,7 +72,7 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
         rendered_document = CONVERTER(pdf_path)
         # The text_from_rendered function extracts the markdown string
         text, _, _ = text_from_rendered(rendered_document)
-        return text
+        return str(text)
 
     try:
         # Run the blocking function in a separate thread
@@ -93,12 +97,12 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
     if CONVERTER is None:
         raise RuntimeError("Marker PDF Converter is not available. Check initialization logs.")
 
-    def blocking_conversion():
+    def blocking_conversion() -> str:
         """
         Een synchrone wrapper voor de marker-conversieaanroep met instellingen.
         """
         # Maak een nieuwe converter met de specifieke instellingen
-        from marker.config.parser import ConfigParser
+        #from marker.config.parser import ConfigParser
         
         # Filter None waarden uit settings
         filtered_settings = {k: v for k, v in settings.items() if v is not None}
@@ -108,7 +112,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
         print(f"🔍 Debug: Filtered settings: {filtered_settings}")
         
         # Maak een basis config dict
-        direct_config = {
+        direct_config: dict[str, Any] = {
             "pdftext_workers": 1,
             "disable_multiprocessing": True,
         }
@@ -174,7 +178,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                         "gemini_model_name": filtered_settings.get("gemini_model_name", "gemini-2.0-flash")
                     })
                 else:
-                    print(f"🔍 Debug: Gemini API key missing, disabling LLM")
+                    print("🔍 Debug: Gemini API key missing, disabling LLM")
                     use_llm = False
                     
             elif llm_provider == "openai":
@@ -187,7 +191,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                         "openai_base_url": filtered_settings.get("openai_base_url", None)
                     })
                 else:
-                    print(f"🔍 Debug: OpenAI API key missing, disabling LLM")
+                    print("🔍 Debug: OpenAI API key missing, disabling LLM")
                     use_llm = False
                     
             elif llm_provider == "anthropic":
@@ -199,7 +203,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                         "anthropic_model_name": filtered_settings.get("anthropic_model_name", "claude-3-5-sonnet-20241022")
                     })
                 else:
-                    print(f"🔍 Debug: Anthropic API key missing, disabling LLM")
+                    print("🔍 Debug: Anthropic API key missing, disabling LLM")
                     use_llm = False
                     
             elif llm_provider == "azure":
@@ -213,7 +217,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                         "azure_api_version": filtered_settings.get("azure_api_version", "2024-02-15-preview")
                     })
                 else:
-                    print(f"🔍 Debug: Azure API key missing, disabling LLM")
+                    print("🔍 Debug: Azure API key missing, disabling LLM")
                     use_llm = False
                     
             elif llm_provider == "ollama":
@@ -236,7 +240,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                         "custom_model_name": filtered_settings.get("custom_model_name", "")
                     })
                 else:
-                    print(f"🔍 Debug: Custom API key missing, disabling LLM")
+                    print("🔍 Debug: Custom API key missing, disabling LLM")
                     use_llm = False
             
         # Voeg alle LLM-specifieke instellingen toe (altijd, ongeacht use_llm status)
@@ -289,7 +293,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
         
         # Genereer equivalente Marker commandline
         marker_cmd = generate_marker_commandline(direct_config, pdf_path)
-        print(f"🔍 Debug: Equivalent Marker commandline:")
+        print("🔍 Debug: Equivalent Marker commandline:")
         print(f"🔍 Debug: {marker_cmd}")
         
         try:
@@ -302,20 +306,20 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                 llm_service=llm_service
             )
             
-            print(f"🔍 Debug: Converter created successfully")
+            print("🔍 Debug: Converter created successfully")
             rendered_document = converter(pdf_path)
             text, _, _ = text_from_rendered(rendered_document)
-            return text
+            return str(text)
             
         except Exception as e:
             print(f"🔍 Debug: Converter failed: {e}")
             print(f"🔍 Debug: Traceback: {traceback.format_exc()}")
             
             # Final fallback naar standaard converter
-            print(f"🔍 Debug: Using fallback standard converter")
+            print("🔍 Debug: Using fallback standard converter")
             rendered_document = CONVERTER(pdf_path)
             text, _, _ = text_from_rendered(rendered_document)
-            return text
+            return str(text)
     
     try:
         # Run the blocking function in a separate thread

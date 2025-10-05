@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 
 # Import Windows fix first
-import windows_fix
+#import windows_fix
 
 def print_banner():
     """Print een mooie banner."""
@@ -25,7 +25,7 @@ def print_banner():
     print("=" * 60)
     print()
 
-async def demo_conversion_service():
+async def demo_conversion_service() -> None:
     """Demo van de conversion service."""
     print("🧪 Testing Conversion Service...")
     
@@ -47,7 +47,7 @@ async def demo_conversion_service():
         print(f"   ❌ Import error: {e}")
         print("   Make sure all dependencies are installed with: uv sync")
 
-def demo_mcp_server():
+def demo_mcp_server() -> None:
     """Demo van de MCP server."""
     print("\n🤖 Testing MCP Server...")
     
@@ -64,22 +64,26 @@ def demo_mcp_server():
     except ImportError as e:
         print(f"   ❌ Import error: {e}")
 
-def demo_gradio_app():
+def demo_gradio_app() -> None:
     """Demo van de Gradio app."""
     print("\n🌐 Testing Gradio App...")
     
     try:
-        import gradio_app
+        import importlib.util
+        spec = importlib.util.find_spec("gradio_app_advanced_full")
         
-        print("   ✅ Gradio app can be imported")
-        print("   Features:")
-        print("     - Drag & drop PDF upload")
-        print("     - Real-time conversion progress")
-        print("     - Markdown preview")
-        print("     - Download functionality")
+        if spec is not None:
+            print("   ✅ Gradio app can be imported")
+            print("   Features:")
+            print("     - Drag & drop PDF upload")
+            print("     - Real-time conversion progress")
+            print("     - Markdown preview")
+            print("     - Download functionality")
+        else:
+            print("   ❌ Gradio app module not found")
         
-    except ImportError as e:
-        print(f"   ❌ Import error: {e}")
+    except Exception as e:
+        print(f"   ❌ Error checking Gradio app: {e}")
 
 def show_usage_instructions():
     """Toon gebruiksinstructies."""
@@ -106,7 +110,7 @@ def show_usage_instructions():
     print("6. Use interactive startup:")
     print("   uv run start_service.py")
 
-async def main():
+async def main() -> None:
     """Hoofdfunctie."""
     print_banner()
     

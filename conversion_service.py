@@ -13,7 +13,7 @@ import os
 from typing import Optional, Tuple
 
 # Import Windows fix first
-import windows_fix
+#import windows_fix
 
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
@@ -62,7 +62,7 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> Tuple[str,
 
     output_format = settings.get("output_format", "markdown")
 
-    def blocking_conversion():
+    def blocking_conversion() -> str:
         """
         A synchronous wrapper for the marker conversion call.
         This function will be run in a separate thread.
@@ -74,13 +74,13 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> Tuple[str,
         
         rendered_document = converter(pdf_path)
         text, _, _ = text_from_rendered(rendered_document)
-        return text
+        return str(text)
 
     try:
         # Run the blocking function in a separate thread
         print(f"🔄 Starting PDF conversion with settings for: {os.path.basename(pdf_path)}")
         converted_text = await asyncio.to_thread(blocking_conversion)
-        print(f"✅ PDF conversion completed successfully")
+        print("✅ PDF conversion completed successfully")
         return converted_text, output_format
     except Exception as e:
         print(f"❌ An error occurred during PDF conversion: {e}")
@@ -137,7 +137,7 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
     if MODELS is None:
         raise RuntimeError("Marker models are not available. Check initialization logs.")
 
-    def blocking_conversion():
+    def blocking_conversion() -> str:
         """
         A synchronous wrapper for the marker conversion call.
         This function will be run in a separate thread.
@@ -150,7 +150,7 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
             rendered_document = converter(pdf_path)
             # The text_from_rendered function extracts the markdown string
             text, _, _ = text_from_rendered(rendered_document)
-            return text
+            return str(text)
         except Exception as e:
             print(f"Error in blocking conversion: {e}")
             raise
@@ -159,7 +159,7 @@ async def convert_pdf_to_markdown(pdf_path: str) -> str:
         # Run the blocking function in a separate thread
         print(f"🔄 Starting PDF conversion for: {os.path.basename(pdf_path)}")
         markdown_text = await asyncio.to_thread(blocking_conversion)
-        print(f"✅ PDF conversion completed successfully")
+        print("✅ PDF conversion completed successfully")
         return markdown_text
     except Exception as e:
         print(f"❌ An error occurred during PDF conversion: {e}")

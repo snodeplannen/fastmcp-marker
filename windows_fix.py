@@ -9,7 +9,7 @@ import os
 import sys
 import multiprocessing
 
-def setup_windows_multiprocessing():
+def setup_windows_multiprocessing() -> None:
     """Setup Windows-compatible multiprocessing settings."""
     if sys.platform == "win32":
         # Set environment variables to prevent threading issues

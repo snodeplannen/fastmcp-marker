@@ -7,11 +7,12 @@ import gradio as gr
 import tempfile
 import traceback
 import asyncio
+from typing import Any
 
 # Import de werkende single-threaded conversion service
 import conversion_service_original as conversion_service
 
-def process_pdf(uploaded_file, progress=gr.Progress(track_tqdm=True), *settings_inputs):
+def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True), *settings_inputs: Any) -> Any:
     """
     Een functie voor PDF-conversie met alle geavanceerde instellingen.
     """
@@ -184,9 +185,9 @@ def process_pdf(uploaded_file, progress=gr.Progress(track_tqdm=True), *settings_
     print(f"🔍 Debug: Starting conversion for file: {uploaded_file.name}")
     print(f"🔍 Debug: LLM Provider: {llm_provider}, Use LLM: {use_llm}")
     print(f"🔍 Debug: Settings count after filtering: {len(settings)}")
-    print(f"🔍 Debug: Key settings:")
+    print("🔍 Debug: Key settings:")
     for key, value in settings.items():
-        if value is not None and value != "" and value != False:
+        if value is not None and value != "" and value:
             print(f"  {key}: {value}")
     
     # Update UI to show detailed processing
@@ -677,7 +678,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     )
                 
                 # Provider visibility logic
-                def update_provider_visibility(provider):
+                def update_provider_visibility(provider: str) -> list:
                     return [
                         gr.update(visible=provider == "gemini"),
                         gr.update(visible=provider == "openai"),
@@ -856,7 +857,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
         complex_relabeling_prompt, table_rewriting_prompt, table_merge_prompt, image_description_prompt,
         # LLM Thresholds & Instellingen
         confidence_threshold, picture_height_threshold, min_equation_height, equation_image_expansion_ratio,
-        max_rows_per_batch, max_table_rows, table_image_expansion_ratio, table_height_threshold,
+        max_rows_per_batch, table_image_expansion_ratio, table_height_threshold,
         table_start_threshold, vertical_table_height_threshold, vertical_table_distance_threshold,
         horizontal_table_width_threshold, horizontal_table_distance_threshold, column_gap_threshold,
         image_expansion_ratio,
@@ -875,7 +876,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
     # Bind de functie aan de convert button
     convert_button.click(
         fn=process_pdf,
-        inputs=[file_input] + settings_components,
+        inputs=[file_input] + settings_components,  # type: ignore
         outputs=[output_markdown, output_raw, download_button, error_accordion, error_details]
     )
 
