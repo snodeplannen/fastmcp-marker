@@ -12,10 +12,13 @@ services:
       - TORCH_DEVICE=cuda
       - CUDA_VISIBLE_DEVICES=0
       - PYTHONPATH=/app
+      - OLLAMA_HOST=host.docker.internal:11434
     volumes:
       - ./data:/app/data
       - ./output:/app/output
       - ./logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         reservations:
@@ -35,10 +38,13 @@ services:
     environment:
       - TORCH_DEVICE=cpu
       - PYTHONPATH=/app
+      - OLLAMA_HOST=host.docker.internal:11434
     volumes:
       - ./data:/app/data
       - ./output:/app/output
       - ./logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     profiles:
       - cpu-only

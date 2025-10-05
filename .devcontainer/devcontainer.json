@@ -49,7 +49,8 @@
     "TORCH_DEVICE": "cuda",
     "CUDA_VISIBLE_DEVICES": "0",
     "PYTHONPATH": "/workspace",
-    "DEBIAN_FRONTEND": "noninteractive"
+    "DEBIAN_FRONTEND": "noninteractive",
+    "OLLAMA_HOST": "host.docker.internal:11434"
   },
 
   // Port forwarding
@@ -83,7 +84,8 @@
 
   // GPU support
   "runArgs": [
-    "--gpus=all"
+    "--gpus=all",
+    "--add-host=host.docker.internal:host-gateway"
   ],
 
   // Workspace folder

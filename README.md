@@ -23,6 +23,7 @@ Het systeem bestaat uit drie hoofdcomponenten:
 - Python 3.12+
 - uv package manager
 - NVIDIA GPU (optioneel, voor betere prestaties)
+- Ollama (voor LLM functionaliteit)
 
 ## 🛠️ Development Setup
 
@@ -236,6 +237,9 @@ Het project bevat volledige Docker ondersteuning met CUDA/cuDNN voor GPU acceler
 #### Vereisten
 - Docker met NVIDIA Container Toolkit
 - NVIDIA GPU met CUDA ondersteuning (optioneel)
+- Ollama draaiend op localhost:11434
+
+> **💡 Ollama Setup**: Zorg ervoor dat Ollama draait op je lokale machine voordat je Docker start. De containers kunnen Ollama bereiken via `host.docker.internal:11434`.
 
 #### Snelle Start
 
@@ -287,7 +291,29 @@ CUDA_VISIBLE_DEVICES=0
 
 # CPU-only mode
 TORCH_DEVICE=cpu
+
+# Ollama integratie
+OLLAMA_HOST=host.docker.internal:11434
 ```
+
+#### Ollama Integratie
+
+De Docker containers zijn geconfigureerd om toegang te hebben tot je lokale Ollama server:
+
+1. **Start Ollama lokaal:**
+   ```bash
+   ollama serve
+   ```
+
+2. **Test Ollama verbinding vanuit container:**
+   ```bash
+   docker exec -it fastmcp-marker curl http://host.docker.internal:11434/api/tags
+   ```
+
+3. **Configureer Ollama model:**
+   ```bash
+   ollama pull llama3.2  # of een ander model
+   ```
 
 ### Cloud Deployment
 
@@ -363,6 +389,12 @@ TORCH_DEVICE=cpu
    - Herstart VS Code/Cursor
    - Gebruik "Dev Containers: Rebuild Container"
    - Controleer extensions in devcontainer.json
+
+5. **Ollama niet bereikbaar vanuit container:**
+   - Controleer of Ollama draait: `ollama list`
+   - Test lokale verbinding: `curl http://localhost:11434/api/tags`
+   - Controleer Docker host gateway: `docker exec -it container ping host.docker.internal`
+   - Herstart Docker Desktop
 
 ### Logs
 

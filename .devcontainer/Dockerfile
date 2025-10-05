@@ -14,6 +14,7 @@ ENV PYTHONUNBUFFERED=1
 ENV TORCH_DEVICE=cuda
 ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONPATH=/workspace
+ENV OLLAMA_HOST=host.docker.internal:11434
 
 # Install system dependencies (uitgebreider voor development)
 RUN apt-get update && apt-get install -y \
