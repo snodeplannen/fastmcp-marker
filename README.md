@@ -5,43 +5,54 @@ Een geavanceerde PDF-naar-Markdown conversie service met dubbele interface: Fast
 ## 🚀 Features
 
 - **Dual Interface**: Zowel MCP server voor AI agents als Gradio web interface voor gebruikers
-- **Batch Processing**: Ondersteuning voor meerdere PDF's tegelijkertijd met ZIP download
+- **ZIP Output**: Alle gegenereerde bestanden worden automatisch verpakt in een ZIP-bestand
+- **Batch Processing**: Ondersteuning voor meerdere PDF's tegelijkertijd met georganiseerde output
 - **High-Fidelity Conversion**: Gebruikt Marker library voor accurate conversie van complexe documenten
 - **Asynchrone Processing**: Non-blocking conversie voor responsieve gebruikerservaring
 - **Robuuste Error Handling**: Uitgebreide foutafhandeling met duidelijke feedback
 - **Progress Tracking**: Real-time voortgangsindicatie voor batch-verwerking
 - **Modulaire Architectuur**: Gescheiden concerns voor onderhoudbaarheid en testbaarheid
 
-## 📁 Batch Processing
+## 📦 ZIP Output Functionaliteit
 
-De applicatie ondersteunt nu batch-verwerking van meerdere PDF-bestanden:
+De applicatie genereert nu automatisch ZIP-bestanden met alle gegenereerde content:
 
-### Gradio Interface
-- Upload meerdere PDF-bestanden tegelijkertijd
-- Real-time voortgangsindicatie per bestand
-- Gecombineerde output met overzicht van alle resultaten
-- ZIP download met individuele bestanden en foutlog
-- Error handling per bestand - mislukte conversies stoppen niet de hele batch
+### Wat wordt opgenomen in het ZIP-bestand:
+- **Geconverteerde tekst**: Markdown, HTML of JSON output
+- **Geëxtraheerde afbeeldingen**: Alle afbeeldingen uit het PDF (indien geactiveerd)
+- **Debug bestanden**: Layout images, JSON data, en andere debug informatie (indien geactiveerd)
+- **Overzicht**: Gestructureerd overzicht van alle conversies
 
-### MCP Server
-- `convert_multiple_pdfs_to_markdown()` tool voor batch-verwerking
-- Ondersteunt lijst van PDF-bestanden met filename en content
-- Retourneert gestructureerde resultaten met success/failure status
-- Samenvatting met statistieken (totaal, succesvol, mislukt)
+### ZIP Structuur:
+```
+conversie_resultaten.zip
+├── 00_OVERVIEW.md                    # Overzicht van alle conversies
+├── 01_document1/
+│   ├── converted_text.md             # Hoofdtekst
+│   ├── output/                       # Alle output bestanden
+│   ├── images/                       # Geëxtraheerde afbeeldingen
+│   └── debug/                        # Debug bestanden
+└── 02_document2/
+    ├── converted_text.md
+    ├── output/
+    ├── images/
+    └── debug/
+```
 
-### Voordelen
-- **Efficiëntie**: Verwerk meerdere documenten in één sessie
-- **Betrouwbaarheid**: Individuele fouten stoppen niet de hele batch
-- **Organisatie**: Georganiseerde output met duidelijke structuur
-- **Flexibiliteit**: Zowel enkele als batch-verwerking ondersteund
+### UI Instellingen:
+- **Inclusief Afbeeldingen in ZIP**: Controleer of afbeeldingen worden opgenomen
+- **Inclusief Debug Bestanden in ZIP**: Controleer of debug data wordt opgenomen
+- **Preview**: Bekijk de geconverteerde tekst direct in de interface
+- **Download**: Download het volledige ZIP-bestand met alle bestanden
 
 ## 🏗️ Architectuur
 
-Het systeem bestaat uit drie hoofdcomponenten:
+Het systeem bestaat uit vier hoofdcomponenten:
 
-1. **`conversion_service.py`** - Core conversie engine met Marker library
-2. **`mcp_server.py`** - FastMCP interface voor AI agents
-3. **`gradio_app.py`** - Web interface voor gebruikers
+1. **`conversion_service_zip.py`** - Nieuwe ZIP-enabled conversie engine met volledige bestandsverzameling
+2. **`conversion_service_original.py`** - Originele conversie engine (backup)
+3. **`mcp_server.py`** - FastMCP interface voor AI agents
+4. **`gradio_app_advanced_full.py`** - Geavanceerde web interface met ZIP output
 
 ## 📋 Vereisten
 
@@ -153,17 +164,20 @@ uv run gradio_app.py
 - Uitgebreide error handling per bestand
 
 #### Geavanceerde Interface
-Start de uitgebreide interface met alle Marker opties:
+Start de uitgebreide interface met alle Marker opties en ZIP output:
 
 ```bash
-uv run gradio_app_advanced.py
+uv run gradio_app_advanced_full.py
 ```
 
 **Geavanceerde Features:**
+- **ZIP Output**: Alle gegenereerde bestanden automatisch verpakt in ZIP
 - **Output Formaten**: Markdown, HTML, JSON
 - **OCR Instellingen**: Surya/ocrmypdf engines, taal detectie
-- **LLM Verbetering**: Gemini API integratie voor hogere nauwkeurigheid
-- **Batch Processing**: Meerdere PDF's tegelijkertijd met ZIP download
+- **LLM Verbetering**: Gemini, OpenAI, Anthropic, Azure, Ollama ondersteuning
+- **Batch Processing**: Meerdere PDF's tegelijkertijd met georganiseerde ZIP output
+- **Debug Functionaliteit**: Layout images, JSON data, debug bestanden
+- **ZIP Instellingen**: Controleer wat er wordt opgenomen in het ZIP-bestand
 - **Verwerkingsopties**: Pagina bereik, batch processing, VRAM optimalisatie
 - **Geavanceerde UI**: Inklapbare instellingen, tabbladen, real-time feedback
 
@@ -201,6 +215,30 @@ Voor gebruik met AI agents (bijvoorbeeld in Cursor):
 ```
 
 ## 🧪 Testing
+
+### ZIP Functionaliteit Testen
+
+Test de nieuwe ZIP output functionaliteit:
+
+```bash
+uv run test_zip_conversion.py
+```
+
+Dit script test:
+- ConversionResult class functionaliteit
+- ZIP bestand creatie en structuur
+- Bestandsverzameling en organisatie
+- Error handling en cleanup
+
+### Batch Conversie Testen
+
+Test batch conversie functionaliteit:
+
+```bash
+uv run test_batch_conversion.py
+```
+
+### Systeem Testen
 
 Run de complete test suite:
 
