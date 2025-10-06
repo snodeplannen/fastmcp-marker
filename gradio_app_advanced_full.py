@@ -8,8 +8,8 @@ import traceback
 import asyncio
 from typing import Any
 
-# Import de nieuwe zip-enabled conversion service
-import conversion_service_zip as conversion_service
+# Import de geünificeerde conversion service
+import conversion_service
 
 def process_pdf(uploaded_files: Any, progress: Any = gr.Progress(track_tqdm=True), *settings_inputs: Any) -> Any:
     """
@@ -243,6 +243,11 @@ def process_pdf(uploaded_files: Any, progress: Any = gr.Progress(track_tqdm=True
         asyncio.set_event_loop(loop)
         
         progress(0.1, desc="Conversie gestart...")
+        
+        # Debug: Print uploaded files info
+        print(f"🔍 Debug: Uploaded files count: {len(uploaded_files)}")
+        for i, file in enumerate(uploaded_files):
+            print(f"🔍 Debug: File {i}: {type(file)} - {getattr(file, 'name', 'no name')} - {getattr(file, 'path', 'no path')}")
         
         # Gebruik de nieuwe zip-enabled conversion service
         zip_path, combined_content = loop.run_until_complete(

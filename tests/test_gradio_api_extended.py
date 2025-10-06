@@ -1,76 +1,148 @@
 """
 Test script voor Gradio API met verschillende opties om ZIP downloads te testen.
+Start automatisch Gradio server, voert tests uit, en ruimt op.
 """
 
-from gradio_client import Client, handle_file  # type: ignore
+from gradio_client import Client, handle_file
 import os
+import subprocess
+import time
+import signal
+import sys
+from pathlib import Path
+
+def check_gradio_server() -> bool:
+    """Check of Gradio server actief is op poort 7860."""
+    try:
+        import requests
+        response = requests.get("http://127.0.0.1:7860/", timeout=2)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+    except Exception:
+        return False
+
+def start_gradio_server() -> subprocess.Popen:
+    """Start Gradio server op de achtergrond."""
+    print("🚀 Starting Gradio server...")
+    
+    # Add parent directory to path
+    parent_dir = str(Path(__file__).parent.parent)
+    
+    # Start Gradio server
+    process = subprocess.Popen([
+        sys.executable, "-m", "uv", "run", "gradio_app_advanced_full.py"
+    ], cwd=parent_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    # Wait for server to start
+    print("⏳ Waiting for Gradio server to start...")
+    for i in range(60):  # Wait max 60 seconds (server needs time to load models)
+        time.sleep(1)
+        if check_gradio_server():
+            print("✅ Gradio server started successfully!")
+            return process
+        if i % 5 == 0:  # Show progress every 5 seconds
+            print(f"   Waiting... ({i+1}/60)")
+    
+    print("❌ Gradio server failed to start within 60 seconds")
+    process.terminate()
+    return None
+
+def stop_gradio_server(process: subprocess.Popen) -> None:
+    """Stop Gradio server."""
+    if process and process.poll() is None:
+        print("🛑 Stopping Gradio server...")
+        try:
+            # Try graceful termination first
+            process.terminate()
+            process.wait(timeout=10)
+            print("✅ Gradio server stopped gracefully")
+        except subprocess.TimeoutExpired:
+            print("⚠️ Graceful shutdown failed, forcing kill...")
+            process.kill()
+            process.wait()
+            print("✅ Gradio server force killed")
+        except Exception as e:
+            print(f"⚠️ Error stopping server: {e}")
 
 def test_gradio_api_zip() -> bool:
     """Test de Gradio API voor ZIP downloads met verschillende opties."""
     
     print("🧪 Testing Gradio API for ZIP downloads with different options...")
     
-    # Maak client
-    client = Client("http://127.0.0.1:7860/")
+    # Check if server is already running
+    gradio_process = None
+    if not check_gradio_server():
+        print("🔍 No Gradio server detected, starting new one...")
+        gradio_process = start_gradio_server()
+        if not gradio_process:
+            print("❌ Failed to start Gradio server")
+            return False
+    else:
+        print("✅ Gradio server already running - using existing server")
     
-    # Test PDF pad
-    test_pdf_path = "testdocument2.pdf"
-    
-    if not os.path.exists(test_pdf_path):
-        print("❌ Test PDF not found!")
-        return False
-    
-    print(f"📄 Using test PDF: {test_pdf_path}")
-    
-    # Test verschillende configuraties
-    test_configs = [
-        {
-            "name": "Basic (no images, no debug)",
-            "extract_images": False,
-            "debug_layout_images": False,
-            "debug_pdf_images": False,
-            "debug_json": False,
-            "include_images_in_zip": False,
-            "include_debug_in_zip": False,
-            "expected_files": ["00_OVERVIEW.md", "01_testdocument2/converted_text.md"]
-        },
-        {
-            "name": "With Images Only",
-            "extract_images": True,
-            "debug_layout_images": False,
-            "debug_pdf_images": False,
-            "debug_json": False,
-            "include_images_in_zip": True,
-            "include_debug_in_zip": False,
-            "expected_files": ["00_OVERVIEW.md", "01_testdocument2/converted_text.md", "01_testdocument2/images/"]
-        },
-        {
-            "name": "With Debug Images Only",
-            "extract_images": False,
-            "debug_layout_images": True,
-            "debug_pdf_images": False,
-            "debug_json": False,
-            "include_images_in_zip": False,
-            "include_debug_in_zip": True,
-            "expected_files": ["00_OVERVIEW.md", "01_testdocument2/converted_text.md", "01_testdocument2/output/debug_data/"]
-        },
-        {
-            "name": "Full Debug Mode",
-            "extract_images": True,
-            "debug_layout_images": True,
-            "debug_pdf_images": True,
-            "debug_json": True,
-            "include_images_in_zip": True,
-            "include_debug_in_zip": True,
-            "expected_files": ["00_OVERVIEW.md", "01_testdocument2/converted_text.md", "01_testdocument2/images/", "01_testdocument2/output/debug_data/"]
-        }
-    ]
-    
-    all_tests_passed = True
-    
-    for i, config in enumerate(test_configs, 1):
-        print(f"\n🧪 Test {i}/4: {config['name']}")
-        print(f"   📋 Config: extract_images={config['extract_images']}, debug_layout_images={config['debug_layout_images']}, debug_pdf_images={config['debug_pdf_images']}, debug_json={config['debug_json']}")
+    try:
+        # Maak client
+        client = Client("http://127.0.0.1:7860/")
+        
+        # Test PDF pad
+        test_pdf_path = "testfiles/test_document.pdf"
+        
+        if not os.path.exists(test_pdf_path):
+            print("❌ Test PDF not found!")
+            return False
+        
+        print(f"📄 Using test PDF: {test_pdf_path}")
+        
+        # Test verschillende configuraties
+        test_configs = [
+            {
+                "name": "Basic (no images, no debug)",
+                "extract_images": False,
+                "debug_layout_images": False,
+                "debug_pdf_images": False,
+                "debug_json": False,
+                "include_images_in_zip": False,
+                "include_debug_in_zip": False,
+                "expected_files": ["00_OVERVIEW.md", "01_test_document/converted_text.md"]
+            },
+            {
+                "name": "With Images Only",
+                "extract_images": True,
+                "debug_layout_images": False,
+                "debug_pdf_images": False,
+                "debug_json": False,
+                "include_images_in_zip": True,
+                "include_debug_in_zip": False,
+                "expected_files": ["00_OVERVIEW.md", "01_test_document/converted_text.md", "01_test_document/images/"]
+            },
+            {
+                "name": "With Debug Images Only",
+                "extract_images": False,
+                "debug_layout_images": True,
+                "debug_pdf_images": False,
+                "debug_json": False,
+                "include_images_in_zip": False,
+                "include_debug_in_zip": True,
+                "expected_files": ["00_OVERVIEW.md", "01_test_document/converted_text.md", "01_test_document/output/debug_data/"]
+            },
+            {
+                "name": "Full Debug Mode",
+                "extract_images": True,
+                "debug_layout_images": True,
+                "debug_pdf_images": True,
+                "debug_json": True,
+                "include_images_in_zip": True,
+                "include_debug_in_zip": True,
+                "expected_files": ["00_OVERVIEW.md", "01_test_document/converted_text.md", "01_test_document/images/", "01_test_document/output/debug_data/"]
+            }
+        ]
+        
+        all_tests_passed = True
+        
+        for i, config in enumerate(test_configs, 1):
+            print(f"\n🧪 Test {i}/4: {config['name']}")
+            print(f"   📋 Config: extract_images={config['extract_images']}, debug_layout_images={config['debug_layout_images']}, debug_pdf_images={config['debug_pdf_images']}, debug_json={config['debug_json']}")
         
         try:
             # Test de API call met de juiste parameters
@@ -176,101 +248,100 @@ def test_gradio_api_zip() -> bool:
                 if error_details and error_details.strip():
                     print(f"❌ Error details: {error_details}")
                     all_tests_passed = False
-                    continue
                 else:
                     print("✅ No errors")
-                
-                # Extraheer het echte ZIP pad uit de dictionary
-                if isinstance(zip_path_dict, dict) and 'value' in zip_path_dict:
-                    zip_path = zip_path_dict['value']
-                else:
-                    zip_path = zip_path_dict
-                
-                # Controleer of er een ZIP bestand is
-                if zip_path and zip_path != "":
-                    print(f"📦 ZIP file created: {zip_path}")
                     
-                    # Controleer ZIP inhoud
-                    if os.path.exists(zip_path):
-                        import zipfile
-                        import tempfile
-                        import shutil
-                        
-                        print("📦 ZIP file exists, downloading and extracting...")
-                        
-                        # Download en extract de ZIP
-                        with zipfile.ZipFile(zip_path, 'r') as z:
-                            files_in_zip = z.namelist()
-                            print(f"📁 ZIP contains {len(files_in_zip)} files:")
+                    # Extraheer het echte ZIP pad uit de dictionary
+                    if isinstance(zip_path_dict, dict) and 'value' in zip_path_dict:
+                        zip_path = zip_path_dict['value']
+                    else:
+                        zip_path = zip_path_dict
+                    
+                    # Controleer of er een ZIP bestand is
+                    if zip_path and zip_path != "":
+                        print(f"📦 ZIP file created: {zip_path}")
+                    
+                        # Controleer ZIP inhoud
+                        if os.path.exists(zip_path):
+                            import zipfile
+                            import tempfile
+                            import shutil
                             
-                            # Extract naar een tijdelijke directory
-                            extract_dir = tempfile.mkdtemp(prefix="zip_test_")
-                            z.extractall(extract_dir)
+                            print("📦 ZIP file exists, downloading and extracting...")
                             
-                            print(f"📂 Extracted to: {extract_dir}")
-                            
-                            # Valideer verwachte bestanden
-                            print("\n🔍 Validating expected files:")
-                            test_passed = True
-                            
-                            # Check if expected_files exists and is iterable
-                            expected_files = config.get("expected_files", [])
-                            if not isinstance(expected_files, (list, tuple)):
-                                print(f"  ⚠️ Warning: expected_files is not a list, got {type(expected_files)}")
-                                expected_files = []
-                            
-                            for expected_file in expected_files:
-                                found = False
+                            # Download en extract de ZIP
+                            with zipfile.ZipFile(zip_path, 'r') as z:
+                                files_in_zip = z.namelist()
+                                print(f"📁 ZIP contains {len(files_in_zip)} files:")
+                                
+                                # Extract naar een tijdelijke directory
+                                extract_dir = tempfile.mkdtemp(prefix="zip_test_")
+                                z.extractall(extract_dir)
+                                
+                                print(f"📂 Extracted to: {extract_dir}")
+                                
+                                # Valideer verwachte bestanden
+                                print("\n🔍 Validating expected files:")
+                                test_passed = True
+                                
+                                # Check if expected_files exists and is iterable
+                                expected_files = config.get("expected_files", [])
+                                if not isinstance(expected_files, (list, tuple)):
+                                    print(f"  ⚠️ Warning: expected_files is not a list, got {type(expected_files)}")
+                                    expected_files = []
+                                
+                                for expected_file in expected_files:
+                                    found = False
+                                    for file in files_in_zip:
+                                        if expected_file in file:
+                                            found = True
+                                            break
+                                    
+                                    if found:
+                                        print(f"  ✅ {expected_file} - Found")
+                                    else:
+                                        print(f"  ❌ {expected_file} - Missing")
+                                        test_passed = False
+                                
+                                # Analyseer de inhoud
+                                print("\n📋 ZIP Content Analysis:")
                                 for file in files_in_zip:
-                                    if expected_file in file:
-                                        found = True
-                                        break
-                                
-                                if found:
-                                    print(f"  ✅ {expected_file} - Found")
-                                else:
-                                    print(f"  ❌ {expected_file} - Missing")
-                                    test_passed = False
-                            
-                            # Analyseer de inhoud
-                            print("\n📋 ZIP Content Analysis:")
-                            for file in files_in_zip:
-                                file_path = os.path.join(extract_dir, file)
-                                if os.path.isfile(file_path):
-                                    file_size = os.path.getsize(file_path)
-                                    print(f"  📄 {file} ({file_size} bytes)")
+                                    file_path = os.path.join(extract_dir, file)
+                                    if os.path.isfile(file_path):
+                                        file_size = os.path.getsize(file_path)
+                                        print(f"  📄 {file} ({file_size} bytes)")
+                                        
+                                        # Toon inhoud van belangrijke bestanden
+                                        if file.endswith('.md') and 'OVERVIEW' in file:
+                                            print("    📝 Overview content:")
+                                            with open(file_path, 'r', encoding='utf-8') as f:
+                                                content = f.read()
+                                                lines = content.split('\n')[:5]  # Eerste 5 regels
+                                                for line in lines:
+                                                    if line.strip():
+                                                        print(f"      {line}")
+                                        
+                                        elif file.endswith('.png'):
+                                            print("    🖼️ Image file detected")
                                     
-                                    # Toon inhoud van belangrijke bestanden
-                                    if file.endswith('.md') and 'OVERVIEW' in file:
-                                        print("    📝 Overview content:")
-                                        with open(file_path, 'r', encoding='utf-8') as f:
-                                            content = f.read()
-                                            lines = content.split('\n')[:5]  # Eerste 5 regels
-                                            for line in lines:
-                                                if line.strip():
-                                                    print(f"      {line}")
-                                    
-                                    elif file.endswith('.png'):
-                                        print("    🖼️ Image file detected")
+                                    elif os.path.isdir(file_path):
+                                        print(f"  📁 {file}/ (directory)")
                                 
-                                elif os.path.isdir(file_path):
-                                    print(f"  📁 {file}/ (directory)")
+                                # Cleanup
+                                shutil.rmtree(extract_dir)
+                                print("🧹 Cleaned up temporary directory")
                             
-                            # Cleanup
-                            shutil.rmtree(extract_dir)
-                            print("🧹 Cleaned up temporary directory")
-                        
-                        if test_passed:
-                            print(f"✅ Test {i} PASSED")
+                            if test_passed:
+                                print(f"✅ Test {i} PASSED")
+                            else:
+                                print(f"❌ Test {i} FAILED")
+                                all_tests_passed = False
                         else:
-                            print(f"❌ Test {i} FAILED")
+                            print("❌ ZIP file does not exist!")
                             all_tests_passed = False
                     else:
-                        print("❌ ZIP file does not exist!")
+                        print("❌ No ZIP file path in response!")
                         all_tests_passed = False
-                else:
-                    print("❌ No ZIP file path in response!")
-                    all_tests_passed = False
                     
             else:
                 print("❌ Invalid response format!")
@@ -280,7 +351,12 @@ def test_gradio_api_zip() -> bool:
             print(f"❌ Test {i} failed: {e}")
             all_tests_passed = False
     
-    return all_tests_passed
+        return all_tests_passed
+    
+    finally:
+        # Cleanup: stop Gradio server if we started it
+        if gradio_process:
+            stop_gradio_server(gradio_process)
 
 if __name__ == "__main__":
     success = test_gradio_api_zip()

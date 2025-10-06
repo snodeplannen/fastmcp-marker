@@ -9,7 +9,7 @@ AI agents can use to convert PDF documents to Markdown format.
 from fastmcp import FastMCP
 
 
-import conversion_service_subprocess as conversion_service
+import conversion_service
 
 # Instantiate the FastMCP server with a descriptive name
 mcp = FastMCP(name="PDF to Markdown Conversion Service")
@@ -39,7 +39,7 @@ async def convert_pdf_to_markdown(pdf_file_content: bytes) -> str:
     """
     try:
         # Delegate the conversion to the core service module
-        markdown_text, _ = await conversion_service.convert_pdf_bytes_with_subprocess(pdf_file_content, {"output_format": "markdown"})
+        markdown_text = await conversion_service.convert_pdf_bytes_to_markdown(pdf_file_content, {"output_format": "markdown"})
         return markdown_text
     except Exception as e:
         # FastMCP will automatically catch this exception and return a
@@ -99,7 +99,7 @@ async def convert_multiple_pdfs_to_markdown(pdf_files: list[dict]) -> dict:
                     continue
                 
                 # Convert single PDF
-                markdown_text, _ = await conversion_service.convert_pdf_bytes_with_subprocess(
+                markdown_text = await conversion_service.convert_pdf_bytes_to_markdown(
                     content, {"output_format": "markdown"}
                 )
                 

@@ -8,7 +8,6 @@ import tempfile
 import os
 import traceback
 import zipfile
-import io
 import shutil
 from typing import Any, Dict, List, Tuple, Optional
 from pathlib import Path

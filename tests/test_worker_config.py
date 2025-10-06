@@ -4,12 +4,19 @@ Test om te verifiëren dat Marker ALTIJD met 1 worker draait.
 
 import asyncio
 import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import conversion_service
+sys.path.append(str(Path(__file__).parent.parent))
+
 from conversion_service_zip import convert_pdf_with_zip_output
 
 async def test_worker_configuration() -> bool:
     """Test dat Marker altijd met 1 worker draait."""
     
-    if not os.path.exists('test_document.pdf'):
+    test_pdf_path = '../testfiles/test_document.pdf'
+    if not os.path.exists(test_pdf_path):
         print("❌ Test PDF niet gevonden!")
         return False
     
@@ -35,7 +42,7 @@ async def test_worker_configuration() -> bool:
         }
         
         try:
-            result = await convert_pdf_with_zip_output('test_document.pdf', settings)
+            result = await convert_pdf_with_zip_output(test_pdf_path, settings)
             
             if result.success:
                 print(f"✅ Conversion successful")

@@ -5,6 +5,12 @@ Test script voor de nieuwe ZIP conversion functionaliteit.
 import asyncio
 import tempfile
 import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import conversion_service
+sys.path.append(str(Path(__file__).parent.parent))
+
 from conversion_service_zip import convert_multiple_pdfs_with_zip, ConversionResult, create_zip_from_results
 
 async def test_zip_conversion() -> bool:

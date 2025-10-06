@@ -4,6 +4,12 @@ Direct test van de conversion service om de debug output te zien.
 
 import asyncio
 import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import conversion_service
+sys.path.append(str(Path(__file__).parent))
+
 from conversion_service_zip import convert_multiple_pdfs_with_zip
 
 class MockUploadedFile:
@@ -17,7 +23,7 @@ async def test_conversion_direct() -> bool:
     print("🧪 Testing conversion service directly...")
     
     # Maak een mock uploaded file
-    test_pdf_path = "test_document.pdf"
+    test_pdf_path = "testfiles/test_document.pdf"
     if not os.path.exists(test_pdf_path):
         print("❌ Test PDF not found!")
         return False
