@@ -122,6 +122,10 @@ def process_pdf(uploaded_files: Any, progress: Any = gr.Progress(track_tqdm=True
             except (ValueError, TypeError):
                 settings[key] = None
     
+    # KRITIEK: Forceer pdftext_workers altijd op 1 voor stabiliteit
+    settings["pdftext_workers"] = 1
+    print("🔒 Forced pdftext_workers to 1 for stability")
+    
     # Converteer boolean waarden
     for key in ["debug", "force_ocr", "strip_existing_ocr", "disable_ocr", "use_llm", 
                 "detect_boxes", "extract_images", "paginate_output", "disable_links",
@@ -771,7 +775,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     label="PDFText Workers", 
                     value=1,
                     precision=0,
-                    info="Aantal workers voor pdftext verwerking."
+                    info="Aantal workers voor pdftext verwerking. (ALTIJD 1 voor stabiliteit)",
+                    interactive=False  # Disable editing - altijd 1
                 )
                 batch_size = gr.Number(
                     label="Batch Size", 

@@ -88,11 +88,12 @@ async def convert_pdf_with_zip_output(pdf_path: str, settings: dict) -> Conversi
             # Filter None waarden uit settings
             filtered_settings = {k: v for k, v in settings.items() if v is not None}
             
-            # Maak een basis config dict
+            # Maak een basis config dict - ALTIJD met 1 worker voor stabiliteit
             direct_config: dict[str, Any] = {
-                "pdftext_workers": 1,
-                "disable_multiprocessing": True,
+                "pdftext_workers": 1,  # KRITIEK: Altijd 1 worker voor stabiliteit
+                "disable_multiprocessing": True,  # KRITIEK: Disable multiprocessing
                 "output_dir": temp_output_dir,  # Zet output directory
+                "debug_data_folder": os.path.join(temp_output_dir, "debug_data"),  # Debug data in output dir
             }
             
             # Voeg alle basis instellingen toe (exclusief LLM instellingen)
@@ -128,7 +129,12 @@ async def convert_pdf_with_zip_output(pdf_path: str, settings: dict) -> Conversi
                     # Skip batch_size waarden die 0 zijn om division by zero te voorkomen
                     if key in ["batch_size", "recognition_batch_size", "detection_batch_size"] and value == 0:
                         continue
-                    direct_config[key] = value
+                    # KRITIEK: Overschrijf pdftext_workers ALTIJD met 1 voor stabiliteit
+                    if key == "pdftext_workers":
+                        print(f"🔒 Overriding pdftext_workers to 1 (was: {value})")
+                        direct_config[key] = 1
+                    else:
+                        direct_config[key] = value
             
             # Handle LLM instellingen correct
             use_llm = filtered_settings.get("use_llm", True)
@@ -293,7 +299,7 @@ def collect_debug_files(output_dir: str) -> List[str]:
     if not os.path.exists(output_dir):
         return debug_files
     
-    # Zoek naar debug directories
+    # Zoek naar debug directories binnen de output directory
     debug_dirs = ['debug_data', 'debug_images', 'layout_images', 'pdf_images']
     
     for debug_dir in debug_dirs:
@@ -303,6 +309,14 @@ def collect_debug_files(output_dir: str) -> List[str]:
                 for filename in filenames:
                     file_path = os.path.join(root, filename)
                     debug_files.append(file_path)
+    
+    # Ook zoeken in de huidige directory voor backward compatibility
+    current_debug_path = os.path.join(os.getcwd(), 'debug_data')
+    if os.path.exists(current_debug_path):
+        for root, dirs, filenames in os.walk(current_debug_path):
+            for filename in filenames:
+                file_path = os.path.join(root, filename)
+                debug_files.append(file_path)
     
     return debug_files
 

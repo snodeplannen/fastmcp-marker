@@ -111,10 +111,10 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
         print(f"🔍 Debug: Creating converter with {len(filtered_settings)} settings")
         print(f"🔍 Debug: Filtered settings: {filtered_settings}")
         
-        # Maak een basis config dict
+        # Maak een basis config dict - ALTIJD met 1 worker voor stabiliteit
         direct_config: dict[str, Any] = {
-            "pdftext_workers": 1,
-            "disable_multiprocessing": True,
+            "pdftext_workers": 1,  # KRITIEK: Altijd 1 worker voor stabiliteit
+            "disable_multiprocessing": True,  # KRITIEK: Disable multiprocessing
         }
         
         # Voeg alle basis instellingen toe (exclusief LLM instellingen)
@@ -154,7 +154,12 @@ async def convert_pdf_with_settings(pdf_path: str, settings: dict) -> str:
                 # Skip batch_size waarden die 0 zijn om division by zero te voorkomen
                 if key in ["batch_size", "recognition_batch_size", "detection_batch_size"] and value == 0:
                     continue
-                direct_config[key] = value
+                # KRITIEK: Overschrijf pdftext_workers ALTIJD met 1 voor stabiliteit
+                if key == "pdftext_workers":
+                    print(f"🔒 Overriding pdftext_workers to 1 (was: {value})")
+                    direct_config[key] = 1
+                else:
+                    direct_config[key] = value
                 added_basic += 1
         
         print(f"🔍 Debug: Added {added_basic} basic settings to config")

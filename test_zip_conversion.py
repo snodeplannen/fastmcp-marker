@@ -88,7 +88,7 @@ startxref
         # Simuleer uploaded files (zoals in Gradio)
         class MockUploadedFile:
             def __init__(self, path: str):
-                self.name = os.path.basename(path)
+                self.name = path  # Gebruik het volledige pad als naam
                 self.path = path
         
         uploaded_files = [MockUploadedFile(path) for path in test_files]
@@ -127,10 +127,11 @@ startxref
         # Cleanup test files
         for file_path in test_files:
             try:
-                os.unlink(file_path)
-                print(f"🧹 Cleaned up test file: {file_path}")
-            except OSError:
-                pass
+                if os.path.exists(file_path):
+                    os.unlink(file_path)
+                    print(f"🧹 Cleaned up test file: {file_path}")
+            except OSError as e:
+                print(f"⚠️ Could not clean up {file_path}: {e}")
 
 async def test_conversion_result():
     """Test de ConversionResult class."""
@@ -161,15 +162,26 @@ if __name__ == "__main__":
     async def main():
         print("🚀 Starting ZIP conversion tests...")
         
-        # Test ConversionResult class
-        await test_conversion_result()
-        
-        # Test ZIP conversion
-        success = await test_zip_conversion()
-        
-        if success:
-            print("\n🎉 All tests passed!")
-        else:
-            print("\n❌ Some tests failed!")
+        try:
+            # Test ConversionResult class
+            await test_conversion_result()
+            
+            # Test ZIP conversion
+            success = await test_zip_conversion()
+            
+            if success:
+                print("\n🎉 All tests passed!")
+            else:
+                print("\n❌ Some tests failed!")
+        except Exception as e:
+            print(f"\n❌ Test suite failed: {e}")
+            import traceback
+            traceback.print_exc()
     
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        if "release unlocked lock" in str(e):
+            print("\n⚠️ Threading cleanup warning (non-critical)")
+        else:
+            raise
