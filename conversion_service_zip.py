@@ -119,7 +119,7 @@ async def convert_pdf_with_zip_output(pdf_path: str, settings: dict) -> Conversi
                 "extract_images", "paginate_output", "page_separator", "disable_links",
                 
                 # Debug instellingen
-                "debug_layout_images", "debug_pdf_images", "debug_json", "debug_data_folder",
+                "debug_layout_images", "debug_pdf_images", "debug_json",
             ]
             
             # Voeg basis instellingen toe
@@ -235,6 +235,8 @@ async def convert_pdf_with_zip_output(pdf_path: str, settings: dict) -> Conversi
                     direct_config[key] = value
             
             print(f"🔍 Debug: Converting {result.pdf_name} with output directory: {temp_output_dir}")
+            print(f"🔍 Debug: Direct config keys: {list(direct_config.keys())}")
+            print(f"🔍 Debug: Direct config values: {direct_config}")
             
             # Extract llm_service from config if present
             llm_service = direct_config.get("llm_service")

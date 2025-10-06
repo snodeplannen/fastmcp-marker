@@ -6,7 +6,7 @@ import asyncio
 import os
 from conversion_service_zip import convert_pdf_with_zip_output
 
-async def test_worker_configuration():
+async def test_worker_configuration() -> bool:
     """Test dat Marker altijd met 1 worker draait."""
     
     if not os.path.exists('test_document.pdf'):

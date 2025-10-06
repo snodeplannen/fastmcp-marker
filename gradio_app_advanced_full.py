@@ -930,4 +930,4 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
     )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(show_api=True, show_error=True)

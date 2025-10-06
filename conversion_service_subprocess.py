@@ -5,12 +5,11 @@ This module provides a workaround for Windows multiprocessing problems
 by using a different approach to PDF conversion.
 """
 
-import asyncio
 import tempfile
 import os
 import subprocess
 import sys
-from typing import Optional, Tuple
+from typing import Tuple
 
 # Import Windows fix first
 #import windows_fix

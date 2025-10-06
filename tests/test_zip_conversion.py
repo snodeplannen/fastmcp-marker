@@ -7,7 +7,7 @@ import tempfile
 import os
 from conversion_service_zip import convert_multiple_pdfs_with_zip, ConversionResult, create_zip_from_results
 
-async def test_zip_conversion():
+async def test_zip_conversion() -> bool:
     """Test de nieuwe ZIP conversion functionaliteit."""
     
     # Maak een test PDF bestand (dummy content)
@@ -133,7 +133,7 @@ startxref
             except OSError as e:
                 print(f"⚠️ Could not clean up {file_path}: {e}")
 
-async def test_conversion_result():
+async def test_conversion_result() -> bool:
     """Test de ConversionResult class."""
     
     print("\n🧪 Testing ConversionResult class...")
@@ -157,9 +157,10 @@ async def test_conversion_result():
     assert result.success == True
     
     print("✅ ConversionResult class test passed!")
+    return True
 
 if __name__ == "__main__":
-    async def main():
+    async def main() -> None:
         print("🚀 Starting ZIP conversion tests...")
         
         try:
