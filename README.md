@@ -11,7 +11,9 @@ Een geavanceerde PDF-naar-Markdown conversie service met dubbele interface: Fast
 - **Asynchrone Processing**: Non-blocking conversie voor responsieve gebruikerservaring
 - **Robuuste Error Handling**: Uitgebreide foutafhandeling met duidelijke feedback
 - **Progress Tracking**: Real-time voortgangsindicatie voor batch-verwerking
-- **Modulaire Architectuur**: Gescheiden concerns voor onderhoudbaarheid en testbaarheid
+- **Geünificeerde Architectuur**: Alle conversie functionaliteit in één service voor betere performance
+- **Autonome Testing**: Volledig geautomatiseerde test suite met server management
+- **Cross-Platform**: Werkt stabiel op Windows, Linux en macOS zonder platform-specifieke fixes
 
 ## 📦 ZIP Output Functionaliteit
 
@@ -47,12 +49,17 @@ conversie_resultaten.zip
 
 ## 🏗️ Architectuur
 
-Het systeem bestaat uit vier hoofdcomponenten:
+Het systeem bestaat uit drie hoofdcomponenten:
 
-1. **`conversion_service_zip.py`** - Nieuwe ZIP-enabled conversie engine met volledige bestandsverzameling
-2. **`conversion_service_original.py`** - Originele conversie engine (backup)
-3. **`mcp_server.py`** - FastMCP interface voor AI agents
-4. **`gradio_app_advanced_full.py`** - Geavanceerde web interface met ZIP output
+1. **`conversion_service.py`** - Geünificeerde conversie engine met ZIP output functionaliteit
+2. **`mcp_server.py`** - FastMCP interface voor AI agents
+3. **`gradio_app_advanced_full.py`** - Geavanceerde web interface met ZIP output
+
+### Vereenvoudigde Architectuur
+- **Geünificeerde service**: Alle conversie functionaliteit in één module
+- **Geen Windows fixes**: Moderne PyTorch/Marker versies werken stabiel zonder workarounds
+- **Geen subprocess overhead**: Directe conversie zonder complexe subprocess communicatie
+- **Betere performance**: Minder overhead en snellere conversie
 
 ## 📋 Vereisten
 
@@ -216,56 +223,76 @@ Voor gebruik met AI agents (bijvoorbeeld in Cursor):
 
 ## 🧪 Testing
 
-### ZIP Functionaliteit Testen
+### Complete Test Suite
 
-Test de nieuwe ZIP output functionaliteit:
-
-```bash
-uv run test_zip_conversion.py
-```
-
-Dit script test:
-- ConversionResult class functionaliteit
-- ZIP bestand creatie en structuur
-- Bestandsverzameling en organisatie
-- Error handling en cleanup
-
-### Batch Conversie Testen
-
-Test batch conversie functionaliteit:
+Run alle tests om de volledige functionaliteit te verifiëren:
 
 ```bash
-uv run test_batch_conversion.py
+# Test unified conversion service
+uv run tests/test_unified_service.py
+
+# Test ZIP conversion functionality
+uv run tests/test_zip_conversion.py
+
+# Test worker configuration
+uv run tests/test_worker_config.py
+
+# Test Gradio API (autonomous server management)
+uv run tests/test_gradio_api_extended.py
+
+# Test direct conversion
+uv run test_conversion_direct.py
 ```
 
-### Systeem Testen
+### Test Organisatie
 
-Run de complete test suite:
+Tests zijn georganiseerd in de `tests/` directory:
+- **`test_unified_service.py`** - Test de geünificeerde conversion service
+- **`test_zip_conversion.py`** - Test ZIP output functionaliteit
+- **`test_worker_config.py`** - Test worker configuration override
+- **`test_gradio_api_extended.py`** - Test Gradio API met autonome server management
 
-```bash
-uv run test_system.py
-```
+### Test Files
 
-Dit test alle componenten:
-- Conversion service initialisatie
-- MCP server setup
-- Gradio app configuratie
+Test PDF bestanden zijn opgeslagen in `testfiles/`:
+- **`test_document.pdf`** - Kleine test PDF voor snelle tests
+- **`testdocument2.pdf`** - Grotere test PDF voor uitgebreide tests
+
+### Autonome Testing
+
+De Gradio API test (`test_gradio_api_extended.py`) is volledig autonoom:
+- Detecteert automatisch of Gradio server draait
+- Start server indien nodig (met 60s timeout voor model loading)
+- Voert alle tests uit
+- Ruimt automatisch op na afloop
 
 ## 📁 Project Structuur
 
 ```
 fastmcp-marker/
-├── conversion_service.py      # Core PDF conversie logica met configuratie
-├── mcp_server.py             # FastMCP server implementatie
-├── gradio_app.py             # Basis Gradio web interface
-├── gradio_app_advanced.py    # Geavanceerde Gradio interface
-├── windows_fix.py            # Windows multiprocessing fix
-├── test_system.py            # Test suite
-├── start_service.py          # Interactive startup script
-├── main.py                   # Eenvoudige demo
-├── pyproject.toml            # Project configuratie
-└── README.md                 # Deze documentatie
+├── conversion_service.py           # Geünificeerde PDF conversie service
+├── mcp_server.py                  # FastMCP server implementatie
+├── gradio_app_advanced_full.py    # Geavanceerde Gradio web interface
+├── test_conversion_direct.py      # Directe conversie test
+├── test_windows_fixes.py          # Windows fixes verificatie test
+├── tests/                         # Test directory
+│   ├── test_unified_service.py    # Unified service tests
+│   ├── test_zip_conversion.py     # ZIP conversion tests
+│   ├── test_worker_config.py      # Worker config tests
+│   └── test_gradio_api_extended.py # Gradio API tests
+├── testfiles/                     # Test PDF bestanden
+│   ├── test_document.pdf          # Kleine test PDF
+│   └── testdocument2.pdf          # Grotere test PDF
+├── pyproject.toml                 # Project configuratie
+└── README.md                      # Deze documentatie
 ```
+
+### Belangrijke Wijzigingen
+
+- **Geünificeerde architectuur**: Alle conversie functionaliteit in één service
+- **Georganiseerde tests**: Tests in `tests/` directory met duidelijke structuur
+- **Test files**: PDF bestanden in `testfiles/` directory
+- **Verwijderde bestanden**: Oude services en Windows fixes niet meer nodig
 
 ## ⚡ Performance
 
@@ -390,22 +417,23 @@ De Docker containers zijn geconfigureerd om toegang te hebben tot je lokale Olla
 
 ### Veelvoorkomende Problemen
 
-1. **Windows Multiprocessing Errors:**
-   - Automatisch opgelost met `windows_fix.py` module
-   - Stelt threading environment variabelen in
-   - Gebruikt 'spawn' multiprocessing methode
-
-2. **Converter initialisatie faalt:**
+1. **Converter initialisatie faalt:**
    - Controleer PyTorch installatie
    - Verificeer GPU drivers (indien GPU gebruikt)
+   - Moderne PyTorch/Marker versies werken stabiel zonder Windows fixes
 
-3. **Memory errors:**
+2. **Memory errors:**
    - Verhoog system memory
    - Gebruik CPU-only mode voor kleinere systemen
 
-4. **Slow conversion:**
+3. **Slow conversion:**
    - Controleer GPU beschikbaarheid
    - Overweeg OCR disable voor digitale documenten
+
+4. **Test failures:**
+   - Zorg dat test PDF bestanden in `testfiles/` directory staan
+   - Run tests vanuit project root directory
+   - Voor Gradio API tests: server wordt automatisch gestart indien nodig
 
 ### Docker-specifieke Problemen
 
