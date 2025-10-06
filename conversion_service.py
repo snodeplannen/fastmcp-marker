@@ -9,7 +9,7 @@ import tempfile
 import os
 import zipfile
 import shutil
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, List, Tuple, Optional
 from pathlib import Path
 
 from marker.converters.pdf import PdfConverter
@@ -323,12 +323,12 @@ def create_overview_content(results: List[ConversionResult]) -> str:
     for i, result in enumerate(results, 1):
         content += f"## {i}. {result.pdf_name}\n\n"
         if result.success:
-            content += f"✅ **Status:** Successfully converted\n"
+            content += "✅ **Status:** Successfully converted\n"
             content += f"📄 **Output files:** {len(result.output_files)}\n"
             content += f"🐛 **Debug files:** {len(result.debug_files)}\n"
             content += f"🖼️ **Images:** {len(result.image_files)}\n"
         else:
-            content += f"❌ **Status:** Failed\n"
+            content += "❌ **Status:** Failed\n"
             content += f"**Error:** {result.error}\n"
         content += "\n"
     
