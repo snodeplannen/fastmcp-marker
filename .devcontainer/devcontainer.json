@@ -48,7 +48,7 @@
   "containerEnv": {
     "TORCH_DEVICE": "cuda",
     "CUDA_VISIBLE_DEVICES": "0",
-    "PYTHONPATH": "/workspace",
+    "PYTHONPATH": "/app",
     "DEBIAN_FRONTEND": "noninteractive",
     "OLLAMA_HOST": "host.docker.internal:11434"
   },
@@ -68,9 +68,9 @@
 
   // Mount volumes
   "mounts": [
-    "source=${localWorkspaceFolder}/data,target=/workspace/data,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/output,target=/workspace/output,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/logs,target=/workspace/logs,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder}/data,target=/app/data,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/output,target=/app/output,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/logs,target=/app/logs,type=bind,consistency=cached"
   ],
 
   // Post-create commands
@@ -89,7 +89,7 @@
   ],
 
   // Workspace folder
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/app",
 
   // Shutdown action
   "shutdownAction": "stopContainer",

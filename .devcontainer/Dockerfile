@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV TORCH_DEVICE=cuda
 ENV CUDA_VISIBLE_DEVICES=0
-ENV PYTHONPATH=/workspace
+ENV PYTHONPATH=/app
 ENV OLLAMA_HOST=host.docker.internal:11434
 
 # Install system dependencies (uitgebreider voor development)
@@ -47,7 +47,6 @@ RUN apt-get install -y \
     python3.12 \
     python3.12-dev \
     python3.12-venv \
-    python3.12-distutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symbolic link for python
@@ -61,7 +60,7 @@ ENV PATH="/root/.cargo/bin:$PATH"
 RUN uv --version
 
 # Set working directory
-WORKDIR /workspace
+WORKDIR /app
 
 # Copy project files voor betere Docker layer caching
 COPY pyproject.toml uv.lock ./
@@ -74,10 +73,10 @@ RUN uv sync --frozen
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /workspace/data /workspace/output /workspace/logs
+RUN mkdir -p /app/data /app/output /app/logs
 
 # Make startup script executable
-RUN chmod +x /workspace/start_services.sh
+RUN chmod +x /app/start_services.sh
 
 # Expose ports
 EXPOSE 8000 7860
