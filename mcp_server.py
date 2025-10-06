@@ -48,6 +48,93 @@ async def convert_pdf_to_markdown(pdf_file_content: bytes) -> str:
         raise
 
 @mcp.tool
+async def convert_multiple_pdfs_to_markdown(pdf_files: list[dict]) -> dict:
+    """
+    Converts multiple PDF files to Markdown text in batch.
+
+    This tool processes multiple PDF documents and returns their content as
+    individual Markdown strings, preserving tables, code blocks, and equations.
+    It is suitable for batch processing of PDF documents by AI agents.
+
+    The conversion uses the advanced Marker library which provides high-fidelity
+    document intelligence, accurately parsing complex elements like tables,
+    mathematical equations (converted to LaTeX), and multi-column layouts.
+
+    Args:
+        pdf_files: A list of dictionaries, each containing:
+            - filename: The name of the PDF file
+            - content: The raw binary content of the PDF file
+
+    Returns:
+        A dictionary containing:
+            - results: List of conversion results, each containing:
+                - filename: Original filename
+                - success: Boolean indicating if conversion succeeded
+                - content: Markdown text (if successful)
+                - error: Error message (if failed)
+            - summary: Summary statistics (total, successful, failed)
+
+    Raises:
+        RuntimeError: If the Marker converter is not available.
+        Exception: If batch processing fails for any reason.
+    """
+    try:
+        results = []
+        successful = 0
+        failed = 0
+        
+        for pdf_file in pdf_files:
+            try:
+                filename = pdf_file.get('filename', 'unknown.pdf')
+                content = pdf_file.get('content', b'')
+                
+                if not content:
+                    results.append({
+                        'filename': filename,
+                        'success': False,
+                        'content': None,
+                        'error': 'No content provided'
+                    })
+                    failed += 1
+                    continue
+                
+                # Convert single PDF
+                markdown_text, _ = await conversion_service.convert_pdf_bytes_with_subprocess(
+                    content, {"output_format": "markdown"}
+                )
+                
+                results.append({
+                    'filename': filename,
+                    'success': True,
+                    'content': markdown_text,
+                    'error': None
+                })
+                successful += 1
+                
+            except Exception as e:
+                filename = pdf_file.get('filename', 'unknown.pdf')
+                results.append({
+                    'filename': filename,
+                    'success': False,
+                    'content': None,
+                    'error': str(e)
+                })
+                failed += 1
+        
+        return {
+            'results': results,
+            'summary': {
+                'total': len(pdf_files),
+                'successful': successful,
+                'failed': failed
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error in batch MCP tool execution: {e}")
+        raise
+
+@mcp.tool
 async def get_converter_status() -> dict:
     """
     Returns the current status of the PDF converter service.
@@ -69,7 +156,8 @@ if __name__ == "__main__":
     # for local tool use. It can also be run with HTTP transport.
     print("🚀 Starting FastMCP PDF to Markdown server...")
     print("📋 Available tools:")
-    print("   - convert_pdf_to_markdown: Convert PDF bytes to Markdown text")
+    print("   - convert_pdf_to_markdown: Convert single PDF bytes to Markdown text")
+    print("   - convert_multiple_pdfs_to_markdown: Convert multiple PDFs to Markdown text (batch)")
     print("   - get_converter_status: Check converter initialization status")
     print()
     

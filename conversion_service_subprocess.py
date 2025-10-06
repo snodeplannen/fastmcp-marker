@@ -13,7 +13,7 @@ import sys
 from typing import Optional, Tuple
 
 # Import Windows fix first
-import windows_fix
+#import windows_fix
 
 async def convert_pdf_with_subprocess(pdf_path: str, settings: dict) -> Tuple[str, str]:
     """

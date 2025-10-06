@@ -4,30 +4,39 @@ Implementeert alle belangrijke Marker library opties met logische indeling.
 """
 
 import gradio as gr
-import tempfile
 import traceback
 import asyncio
 from typing import Any
 
-# Import de werkende single-threaded conversion service
-import conversion_service_original as conversion_service
+# Import de nieuwe zip-enabled conversion service
+import conversion_service_zip as conversion_service
 
-def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True), *settings_inputs: Any) -> Any:
+def process_pdf(uploaded_files: Any, progress: Any = gr.Progress(track_tqdm=True), *settings_inputs: Any) -> Any:
     """
     Een functie voor PDF-conversie met alle geavanceerde instellingen.
+    Ondersteunt nu zowel enkele als meerdere PDF-bestanden.
     """
-    if uploaded_file is None:
+    if uploaded_files is None or len(uploaded_files) == 0:
         return (
-            "### Upload eerst een PDF-bestand.",
+            "### Upload eerst een of meerdere PDF-bestanden.",
             "",
             gr.update(visible=False),
             gr.update(visible=False),
             ""
         )
+    
+    # Normaliseer naar lijst voor consistente verwerking
+    if not isinstance(uploaded_files, list):
+        uploaded_files = [uploaded_files]
 
     # Update UI to show processing state
+    file_count = len(uploaded_files)
+    file_names = [f.name for f in uploaded_files]
+    
     yield (
-        "### ⏳ PDF Conversie Gestart\n\nDe conversie is begonnen. Dit kan even duren...",
+        f"### ⏳ PDF Conversie Gestart\n\n**{file_count} bestand{'en' if file_count > 1 else ''}** worden verwerkt:\n" +
+        "\n".join([f"• {name}" for name in file_names]) +
+        "\n\nDe conversie is begonnen. Dit kan even duren...",
         "",
         gr.update(visible=False),
         gr.update(visible=False),
@@ -182,7 +191,7 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
         for key in llm_specific_keys:
             settings.pop(key, None)
 
-    print(f"🔍 Debug: Starting conversion for file: {uploaded_file.name}")
+    print(f"🔍 Debug: Starting batch conversion for {file_count} files")
     print(f"🔍 Debug: LLM Provider: {llm_provider}, Use LLM: {use_llm}")
     print(f"🔍 Debug: Settings count after filtering: {len(settings)}")
     print("🔍 Debug: Key settings:")
@@ -212,7 +221,7 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
     
     yield (
         "### 🔄 PDF Conversie in Uitvoering\n\n" +
-        f"**Bestand:** {uploaded_file.name}\n" +
+        f"**Bestanden:** {file_count} bestand{'en' if file_count > 1 else ''}\n" +
         f"**Output Formaat:** {settings.get('output_format', 'markdown')}\n" +
         f"**LLM Gebruik:** {llm_info}\n" +
         f"**OCR:** {'Geforceerd' if settings.get('force_ocr') else 'Automatisch'}\n" +
@@ -229,31 +238,41 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
-        # Add progress tracking
-        progress(0.1, desc="Initialiseren van conversie...")
+        progress(0.1, desc="Conversie gestart...")
         
-        converted_content = loop.run_until_complete(
-            conversion_service.convert_pdf_with_settings(uploaded_file.name, settings)
+        # Gebruik de nieuwe zip-enabled conversion service
+        zip_path, combined_content = loop.run_until_complete(
+            conversion_service.convert_multiple_pdfs_with_zip(
+                uploaded_files, 
+                settings,
+                include_debug=settings.get("include_debug_in_zip", False),
+                include_images=settings.get("include_images_in_zip", True)
+            )
         )
+        
         loop.close()
         
         progress(0.9, desc="Conversie voltooid, verwerken van resultaat...")
         
-        output_format = settings.get("output_format", "markdown")
-        print(f"🔍 Debug: Conversion completed, output format: {output_format}")
-        
-        # --- Zet UI in "Succes"-staat ---
-        file_extension = f".{output_format}"
-        with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=file_extension, encoding="utf-8") as out_file:
-            out_file.write(converted_content)
-            output_file_path = out_file.name
+        print(f"🔍 Debug: Conversion completed, zip created: {zip_path}")
         
         progress(1.0, desc="Conversie succesvol voltooid!")
         
+        # Update status message
+        status_message = "### ✅ Conversie Voltooid\n\n"
+        status_message += f"**{file_count}** bestand{'en' if file_count > 1 else ''} succesvol geconverteerd.\n\n"
+        status_message += "Alle gegenereerde bestanden zijn opgeslagen in het ZIP-bestand, inclusief:\n"
+        status_message += "• Geconverteerde tekst (Markdown/HTML/JSON)\n"
+        if settings.get("include_images_in_zip", True):
+            status_message += "• Geëxtraheerde afbeeldingen\n"
+        if settings.get("include_debug_in_zip", False):
+            status_message += "• Debug bestanden en afbeeldingen\n"
+        status_message += "\nDownload het ZIP-bestand om alle bestanden te bekijken."
+        
         yield (
-            converted_content,
-            converted_content,
-            gr.update(visible=True, value=output_file_path),
+            combined_content,
+            combined_content,
+            gr.update(visible=True, value=zip_path),
             gr.update(visible=False),
             ""
         )
@@ -276,11 +295,17 @@ def process_pdf(uploaded_file: Any, progress: Any = gr.Progress(track_tqdm=True)
 # --- Gradio UI Layout met uitgebreide instellingen ---
 with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as demo:
     gr.Markdown("# 📄 Geavanceerde PDF naar Markdown Converter")
-    gr.Markdown("Upload een PDF en configureer alle Marker library opties voor optimale conversie.")
+    gr.Markdown("Upload één of meerdere PDF-bestanden en configureer alle Marker library opties voor optimale conversie. "
+                "Alle gegenereerde bestanden (tekst, afbeeldingen, debug data) worden automatisch verpakt in een ZIP-bestand voor download. "
+                "Je kunt ook alleen de geconverteerde tekst bekijken in de preview.")
 
     with gr.Row():
         with gr.Column(scale=1):
-            file_input = gr.File(label="Upload PDF", file_types=['.pdf'])
+            file_input = gr.File(
+                label="Upload PDF(s)", 
+                file_types=['.pdf'],
+                file_count="multiple"
+            )
             
             with gr.Accordion("⚙️ Basis Instellingen", open=True) as basic_settings:
                 output_format = gr.Radio(
@@ -789,6 +814,23 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     info="Schakel link detectie uit."
                 )
             
+            with gr.Accordion("📦 ZIP Output Instellingen", open=True) as zip_settings:
+                include_images_in_zip = gr.Checkbox(
+                    label="Inclusief Afbeeldingen in ZIP", 
+                    value=True,
+                    info="Voeg geëxtraheerde afbeeldingen toe aan het ZIP-bestand."
+                )
+                include_debug_in_zip = gr.Checkbox(
+                    label="Inclusief Debug Bestanden in ZIP", 
+                    value=False,
+                    info="Voeg debug bestanden en afbeeldingen toe aan het ZIP-bestand."
+                )
+                zip_description = gr.Markdown(
+                    "**ZIP Output:** Alle gegenereerde bestanden worden automatisch verpakt in een ZIP-bestand. "
+                    "Dit omvat geconverteerde tekst, afbeeldingen (indien geëxtraheerd) en debug bestanden (indien geactiveerd). "
+                    "Je kunt ook alleen de geconverteerde tekst bekijken in de preview hiernaast."
+                )
+            
             with gr.Accordion("🐛 Debug & Troubleshooting", open=False) as debug_settings:
                 debug_layout_images = gr.Checkbox(
                     label="Debug Layout Images", 
@@ -811,7 +853,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                     info="Folder voor debug data dump."
                 )
 
-            convert_button = gr.Button("🚀 Converteer PDF", variant="primary", size="lg")
+            convert_button = gr.Button("🚀 Converteer PDF(s)", variant="primary", size="lg")
 
         with gr.Column(scale=2):
             with gr.Tabs():
@@ -820,7 +862,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
                 with gr.TabItem("📝 Ruwe Output"):
                     output_raw = gr.Code(label="Broncode", language="markdown")
                 with gr.TabItem("💾 Download"):
-                    download_button = gr.DownloadButton(label="Download Bestand", visible=False)
+                    download_button = gr.DownloadButton(label="📦 Download ZIP Bestand", visible=False)
             
             with gr.Accordion("❌ Foutdetails", open=False, visible=False) as error_accordion:
                 error_details = gr.Markdown()
@@ -869,6 +911,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Geavanceerde PDF Converter") as de
         pdftext_workers, batch_size, recognition_batch_size, detection_batch_size,
         # Output instellingen
         extract_images, paginate_output, page_separator, disable_links,
+        # ZIP instellingen
+        include_images_in_zip, include_debug_in_zip,
         # Debug instellingen
         debug_layout_images, debug_pdf_images, debug_json, debug_data_folder
     ]

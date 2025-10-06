@@ -5,10 +5,35 @@ Een geavanceerde PDF-naar-Markdown conversie service met dubbele interface: Fast
 ## 🚀 Features
 
 - **Dual Interface**: Zowel MCP server voor AI agents als Gradio web interface voor gebruikers
+- **Batch Processing**: Ondersteuning voor meerdere PDF's tegelijkertijd met ZIP download
 - **High-Fidelity Conversion**: Gebruikt Marker library voor accurate conversie van complexe documenten
 - **Asynchrone Processing**: Non-blocking conversie voor responsieve gebruikerservaring
 - **Robuuste Error Handling**: Uitgebreide foutafhandeling met duidelijke feedback
+- **Progress Tracking**: Real-time voortgangsindicatie voor batch-verwerking
 - **Modulaire Architectuur**: Gescheiden concerns voor onderhoudbaarheid en testbaarheid
+
+## 📁 Batch Processing
+
+De applicatie ondersteunt nu batch-verwerking van meerdere PDF-bestanden:
+
+### Gradio Interface
+- Upload meerdere PDF-bestanden tegelijkertijd
+- Real-time voortgangsindicatie per bestand
+- Gecombineerde output met overzicht van alle resultaten
+- ZIP download met individuele bestanden en foutlog
+- Error handling per bestand - mislukte conversies stoppen niet de hele batch
+
+### MCP Server
+- `convert_multiple_pdfs_to_markdown()` tool voor batch-verwerking
+- Ondersteunt lijst van PDF-bestanden met filename en content
+- Retourneert gestructureerde resultaten met success/failure status
+- Samenvatting met statistieken (totaal, succesvol, mislukt)
+
+### Voordelen
+- **Efficiëntie**: Verwerk meerdere documenten in één sessie
+- **Betrouwbaarheid**: Individuele fouten stoppen niet de hele batch
+- **Organisatie**: Georganiseerde output met duidelijke structuur
+- **Flexibiliteit**: Zowel enkele als batch-verwerking ondersteund
 
 ## 🏗️ Architectuur
 
@@ -121,11 +146,11 @@ uv run gradio_app.py
 ```
 
 **Features:**
-- Drag & drop PDF upload
-- Real-time conversie progress
+- Drag & drop PDF upload (enkele of meerdere bestanden)
+- Batch processing met real-time voortgangsindicatie
 - Markdown preview met copy button
-- Download geconverteerde bestanden
-- Uitgebreide error handling
+- ZIP download voor batch-resultaten
+- Uitgebreide error handling per bestand
 
 #### Geavanceerde Interface
 Start de uitgebreide interface met alle Marker opties:
@@ -138,6 +163,7 @@ uv run gradio_app_advanced.py
 - **Output Formaten**: Markdown, HTML, JSON
 - **OCR Instellingen**: Surya/ocrmypdf engines, taal detectie
 - **LLM Verbetering**: Gemini API integratie voor hogere nauwkeurigheid
+- **Batch Processing**: Meerdere PDF's tegelijkertijd met ZIP download
 - **Verwerkingsopties**: Pagina bereik, batch processing, VRAM optimalisatie
 - **Geavanceerde UI**: Inklapbare instellingen, tabbladen, real-time feedback
 
@@ -152,7 +178,8 @@ uv run mcp_server.py
 De server draait op `http://localhost:8000`
 
 **Beschikbare tools:**
-- `convert_pdf_to_markdown`: Converteer PDF bytes naar Markdown
+- `convert_pdf_to_markdown`: Converteer enkele PDF bytes naar Markdown
+- `convert_multiple_pdfs_to_markdown`: Batch conversie van meerdere PDF's
 - `get_converter_status`: Controleer converter status
 
 ### MCP Client Integratie
